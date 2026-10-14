@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {"id": "workspace-01", "area": "workspace", "spec": "docs/implementation.html#ownership", "scenario": "两个 workspace 使用相同目录", "expected": "herdr 内会话按 workspace 区分，外部会话在归属有歧义时保持未分类。", "automated_command": null},
+    {"id": "workspace-02", "area": "workspace", "spec": "docs/implementation.html#ownership", "scenario": "workspace 关闭、重命名和重新关联", "expected": "已有项目身份、历史任务、待处理事项和 Record 继续可查。", "automated_command": null},
+    {"id": "preview-01", "area": "preview", "spec": "docs/implementation.html#sessions", "scenario": "执行、等待、完成与退出的连续事件", "expected": "轮次状态按事件更新，确认退出后移出 Live，历史和待处理事项保留。", "automated_command": null},
+    {"id": "preview-02", "area": "preview", "spec": "docs/implementation.html#sessions", "scenario": "长时间无输出、连接断开与 PID 重用", "expected": "无输出保持实际执行状态，断开标记待确认，新进程身份与旧实例区分。", "automated_command": null},
+    {"id": "preview-03", "area": "preview", "spec": "docs/implementation.html#adapters", "scenario": "desktop 宿主同时持有执行中和已完成会话", "expected": "按会话和 turn 区分状态，锁或公共 app-server 的 notLoaded 状态不单独决定执行状态。", "automated_command": null},
+    {"id": "attention-01", "area": "attention", "spec": "docs/implementation.html#attention", "scenario": "查看结果、确认旧事项时又到达新结果", "expected": "查看保留提示，确认仅影响指定事项，新到达结果继续待处理。", "automated_command": null},
+    {"id": "attention-02", "area": "attention", "spec": "docs/implementation.html#attention", "scenario": "首次导入历史、重复事件和服务重启", "expected": "旧历史可检索，当前等待进入待处理，重复采集和重启保持同一事项身份。", "automated_command": null},
+    {"id": "record-01", "area": "record", "spec": "docs/implementation.html#record", "scenario": "零个 agent 时记录、整理和归档", "expected": "可不选项目和会话，保存 idea 与 TODO，并能查找、归档和恢复。", "automated_command": null},
+    {"id": "record-02", "area": "record", "spec": "docs/implementation.html#storage", "scenario": "刷新、服务重启、保存失败和多标签页冲突", "expected": "已保存内容恢复，失败与冲突保留编辑文本，保存提示反映实际持久化状态。", "automated_command": null},
+    {"id": "record-03", "area": "record", "spec": "docs/implementation.html#record", "scenario": "复制 Ready 正文", "expected": "文字和换行正确，Record 保持原阶段，复制后仍可修改或继续准备。", "automated_command": null},
+    {"id": "record-04", "area": "record", "spec": "docs/implementation.html#record", "scenario": "确认发送后修改正文并再次发送", "expected": "各次发送保存当时的正文和关联，后续编辑保留已发送版本。", "automated_command": null},
+    {"id": "search-01", "area": "search", "spec": "docs/implementation.html#storage", "scenario": "中文双字词、长片段、代码符号和分页", "expected": "Record 与会话均能按字面内容检索，短词查询可用，分页保持完整匹配结果。", "automated_command": null},
+    {"id": "search-02", "area": "search", "spec": "docs/implementation.html#adapters", "scenario": "JSONL 半行、文件替换、重复消息和来源删除", "expected": "完整行继续解析，重复内容合并，已采集文本保留，缺失附件有说明。", "automated_command": null},
+    {"id": "rendering-01", "area": "rendering", "spec": "docs/implementation.html#storage", "scenario": "Markdown、工具输出和链接含可执行内容", "expected": "页面按安全规则渲染，普通预览保持可读，写入请求遵守本机同源限制。", "automated_command": null}
+  ]
+}

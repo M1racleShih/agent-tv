@@ -1,0 +1,11 @@
+.agents/skills/
+.claude/skills/
+.kimi/skills/
+.pi/skills/
+.dynamic-skills/
+.harness/
+__pycache__/
+*.pyc
+target/
+web/node_modules/
+web/dist/

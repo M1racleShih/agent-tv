@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "required_documents": [
+    "README.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "docs/discovery.html",
+    "docs/implementation.html",
+    "docs/harness.html",
+    "docs/plans/template.html",
+    "docs/plans/first-delivery.html",
+    "docs/plans/repository-bootstrap.html"
+  ],
+  "ignored_directories": [
+    ".agents/skills/",
+    ".claude/skills/",
+    ".kimi/skills/",
+    ".pi/skills/",
+    ".dynamic-skills/",
+    ".harness/",
+    "target/",
+    "web/node_modules/"
+  ],
+  "rust_packages": {
+    "agenttv-domain": {
+      "path": "crates/domain",
+      "local_dependencies": [],
+      "forbidden_dependencies": [
+        "axum",
+        "tokio",
+        "rusqlite"
+      ]
+    },
+    "agenttv-storage": {
+      "path": "crates/storage",
+      "local_dependencies": [
+        "agenttv-domain"
+      ]
+    },
+    "agenttv-adapters": {
+      "path": "crates/adapters",
+      "local_dependencies": [
+        "agenttv-domain"
+      ]
+    },
+    "agenttv-server": {
+      "path": "crates/server",
+      "local_dependencies": [
+        "agenttv-domain",
+        "agenttv-storage",
+        "agenttv-adapters"
+      ]
+    }
+  },
+  "web_scripts": [
+    "check",
+    "test",
+    "build"
+  ],
+  "required_case_areas": [
+    "workspace",
+    "preview",
+    "attention",
+    "record",
+    "search",
+    "rendering"
+  ]
+}

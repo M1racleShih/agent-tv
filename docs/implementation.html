@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>AgentTV · 接入与数据设计</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <header class="top"><a href="discovery.html">AgentTV <span>项目文档</span></a><span class="revision">接入与数据设计 · v0.1</span><button type="button" class="print" onclick="window.print()">打印本页</button></header>
+  <div class="shell">
+    <nav class="sidebar" aria-label="文档导航"><details open><summary>目录</summary><p class="nav-group">项目设计</p><a href="discovery.html">需求与 GUI 方向</a><a aria-current="page" href="implementation.html">接入与数据设计</a><p class="nav-group">开发与计划</p><a href="harness.html">开发 Harness</a><a href="plans/first-delivery.html">首轮开发计划</a><a href="plans/template.html">开发计划模板</a></details></nav>
+    <main id="main">
+      <header class="page-head">
+        <div class="eyebrow">2026-10-14 · Ubuntu 24.04 · 单机旁路观察</div>
+        <h1>沿用 workspace，让进展和想法都能找回来</h1>
+        <p class="lead">首版从 herdr workspace 获得任务归属，以原生会话识别任务；Preview 保存进展与待处理结果，Record 随时保存 idea、TODO 与 prompt。两者共享项目选择，也能各自独立使用。</p>
+        <div class="badges">
+          <span class="badge confirmed">需求与 GUI 方向已有共识</span>
+          <span class="badge proposed">Workspace 优先归属建议</span>
+          <span class="badge proposed">技术选择与验收目标待确认</span>
+        </div>
+        <p class="small">这是待讨论的设计稿。已有本机观察支持基础接入方向，五个接入对象的完整状态行为安排在后续验证，产品开发等待整体方案确认。需求、首版范围和 GUI 参考见 <a href="discovery.html">需求与设计讨论稿</a>。</p>
+      </header>
+      <nav class="toc" aria-label="本页目录"><b>本页内容</b><ul><li><a href="#direction">01 整体方案</a></li><li><a href="#ownership">02 Workspace 与归属</a></li><li><a href="#sessions">03 会话、轮次与状态</a></li><li><a href="#attention">04 持续保留待处理事项</a></li><li><a href="#record">05 Record 的完整流程</a></li><li><a href="#adapters">06 各 agent 怎样接入</a></li><li><a href="#evidence">07 本机验证结果</a></li><li><a href="#storage">08 保存、恢复与搜索</a></li><li><a href="#delivery">09 开发顺序与验收</a></li><li><a href="#discussion">10 进入开发前的决定</a></li><li><a href="#sources">资料来源</a></li></ul></nav>
+      <p class="small document-note">本稿提出技术选择和具体行为，等待整体方案确认。产品界面继续以你的 GUI demo 为参考。</p>
+
+      <section id="direction">
+        <h2>01 整体方案：一个本机服务，两个工作区</h2>
+        <p>建议使用 Rust 编写 AgentTV 服务，负责读取 herdr、采集原生会话、保存数据并提供本机 HTTP 接口。浏览器负责查看 Preview 和编辑 Record。浏览器关闭后，服务继续采集；服务重启后，从本机数据库恢复记录和待处理事项。</p>
+        <ol class="flow" aria-label="数据流">
+          <li><strong>获取现有工作信息</strong><small>herdr socket、agent 会话文件，以及需要时添加的轻量事件插件。</small></li>
+          <li><strong>Rust 服务与 SQLite</strong><small>识别会话，合并重复来源，保存历史、待处理事项和独立 Record。</small></li>
+          <li><strong>Preview / Record 网页</strong><small>按 workspace 查看任务，随时记录想法，手动复制已准备好的 prompt。</small></li>
+        </ol>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">组成</th><th scope="col">建议选择与原因</th></tr></thead>
+            <tbody>
+              <tr><td>服务与采集</td><td>Rust + Tokio + Axum。持续监听多种来源，查询和编辑使用 HTTP，状态更新使用 SSE，由服务单向推送到网页。</td></tr>
+              <tr><td>持久保存</td><td>SQLite，通过 rusqlite 使用随程序打包的 SQLite 和 FTS5 全文索引。本机部署简单，Record 保存与待处理确认可以在数据库事务中完成。</td></tr>
+              <tr><td>网页</td><td>Svelte 5 + TypeScript。卡片、筛选、详情抽屉和编辑器需要连续交互；组件结构适合按你的 demo 逐步完善。Rust 负责后端，网页保留浏览器生态中的编辑和渲染工具。</td></tr>
+              <tr><td>分发</td><td>前端构建结果随 Rust 程序提供。运行时使用一个本机服务，无需额外启动前端开发服务器。数据放入独立的本机用户数据目录。</td></tr>
+              <tr><td>模型依赖</td><td>首版用结构化事件和已有文本完成状态判断、索引与 Record 管理。最新进展来自实际消息；模型信息仅在来源提供时显示。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>GUI 继续采用 demo 的 Preview / Record 主切换、共享左栏、Live 卡片、Task 表格和右侧详情抽屉。文档使用 Catppuccin；产品配色、密度和操作位置依照 demo，在实现时结合真实内容完善。</p>
+      </section>
+
+      <section id="ownership">
+        <h2>02 先按 herdr workspace 划分任务</h2>
+        <p>建议左栏默认导入 herdr 的 workspace 名称和顺序。某条会话在 herdr 中运行时，直接使用其 <code>workspace_id</code> 归属，切换 Preview 和 Record 时保留左栏选择。首次使用即可看到已有分组，后续仍可创建仅在 AgentTV 中使用的项目。</p>
+        <h3>显示沿用 workspace，历史使用自己的项目 ID</h3>
+        <p>AgentTV 为每个项目生成持久 ID，另存 herdr 来源和 workspace 的关联。这样，workspace 关闭后，项目、历史会话和 Record 仍有归属；workspace 重命名后，关联内容继续显示在同一项目中。首版按一个 workspace 对应一个项目展示。</p>
+        <p>当前尚未验证 herdr 的 workspace ID 在重建服务或恢复布局后的长期稳定性。连接中断后先重新获取快照；能够确认身份连续时沿用关联。服务重建后出现无法确认的新 workspace 时，提供关联到已有项目的选择，避免仅凭同名合并历史。</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">会话来源或操作</th><th scope="col">首版归属规则</th></tr></thead>
+            <tbody>
+              <tr><td>herdr 中的会话</td><td>当前执行归属直接使用 herdr 提供的 workspace。即使两个 workspace 使用同一目录，也各自展示自己的会话。</td></tr>
+              <tr><td>Codex desktop、独立 CLI</td><td>使用原生会话的工作目录，匹配你明确关联到项目的目录。唯一匹配时归入该项目；目录重叠时选择更具体的路径；同一路径对应多个项目时进入“未分类”。</td></tr>
+              <tr><td>workspace 缺少目录</td><td>由你补充项目目录。pane 的 <code>cwd</code> 可作为选择目录的参考，实际关联由你确定。目录归属按完整路径片段匹配。</td></tr>
+              <tr><td>手动调整会话归属</td><td>AgentTV 保存你的选择，并显示原 herdr workspace 作为来源信息。后续自动发现沿用手动选择；可撤销选择，恢复自动归属。</td></tr>
+              <tr><td>会话迁移到其他 workspace</td><td>自动归属的会话更新当前项目，同时保存迁移前的归属记录。已经关联的 Record 保持自己的项目选择，可由你另行调整。</td></tr>
+              <tr><td>多个 workspace 同时报同一会话</td><td>Task 仍保留一条索引，列出各个来源；归属显示待确认，供你选择。已经设置的手动归属优先。</td></tr>
+              <tr><td>workspace 关闭</td><td>项目可从历史与 Record 中继续访问，存在未处理事项时仍有入口。Live 依据会话实例是否退出更新；如果还有可确认的活跃会话，继续保留分组。之后可手动归档项目。</td></tr>
+              <tr><td>自由记录 idea</td><td>默认存入全局收件箱，项目可选。在某个项目中快速记录时可预填当前项目，你随时可以清除或更换。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout"><p>本机服务快照中的 workspace 有名称和会话关联，未提供统一目录。herdr 内直接按 workspace 分组已经有数据依据；外部会话的目录匹配需要保存明确的项目目录关系。</p></div>
+      </section>
+
+      <section id="sessions">
+        <h2>03 一条会话是任务，一轮执行是一次进展</h2>
+        <p>同一条会话可以多次接收 prompt，也可以退出后重新打开。Task 索引始终保留同一条任务；每次执行分别记录开始、结束和结果。执行实例保存启动身份，用来判断这次运行是否仍存活。</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">需要识别的对象</th><th scope="col">保存什么，为什么</th></tr></thead>
+            <tbody>
+              <tr><td>原生会话</td><td>agent 类型、来源数据目录和原生会话 ID 共同识别。Codex CLI 与 desktop 的同一原生会话合并，启动工具作为来源信息保存。标题与 AgentTV 别名分别保存。</td></tr>
+              <tr><td>执行轮次</td><td>原生 turn ID，或可靠事件序号对应的本地轮次 ID。消息、完成事项和 Record 的发送关联能指向具体轮次。</td></tr>
+              <tr><td>执行实例</td><td>本机来源、PID 与进程启动时间，或已验证的宿主实例标识。PID 重用时建立新实例；desktop 的多个会话分别记录，允许共享同一宿主进程。</td></tr>
+              <tr><td>状态观察</td><td>状态值、来源、来源事件序号、发生时间和采集时间。来源冲突时保留观察记录，页面给出可解释的当前状态。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Live 显示当前实例，Task 保留全部历史</h3>
+        <p>CLI 已启动且身份可确认时出现在 Live，包括正在执行、等待输入和空闲状态。确认退出后移除。Desktop 中已经加载、能确认仍由宿主持有的会话可以显示；仅有历史文件的会话在 Task 中查找。采集失败时保留最后观察并标记状态待确认。</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">显示状态</th><th scope="col">产生条件与后续行为</th></tr></thead>
+            <tbody>
+              <tr><td>正在执行</td><td>原生开始事件或已验证的生命周期信号表示本轮开始，尚无对应终止事件，执行实例仍可确认。工具运行和重试期间继续保持。</td></tr>
+              <tr><td>等待你输入</td><td>来源明确报告待回复或待授权请求。普通助手消息和长时间无输出只作为进展信息。</td></tr>
+              <tr><td>空闲 / 本轮已完成</td><td>当前轮次收到终止事件。完成结果创建待处理事项；agent 仍存活时保留 Live 入口。</td></tr>
+              <tr><td>执行异常</td><td>有明确的本轮失败或无法继续事件。工具的一次失败可能被 agent 自行恢复，只在进展中显示，最终是否需要处理依据本轮结果。</td></tr>
+              <tr><td>状态待确认</td><td>采集连接断开、来源冲突或无法确认实例身份。显示最后观察时间，重连后重新获取快照和近期事件。</td></tr>
+              <tr><td>已退出</td><td>实例结束、可靠会话关闭信号，或已确认进程身份消失。移出 Live；未结束的轮次记为中断并生成待处理事项。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>不同来源分别提供事实：原生轮次事件用于执行开始与结束，进程身份用于存活，herdr 直接提供 workspace。Herdr 状态含有终端推断时保留来源说明；同一轮次的当前观察与原生事件矛盾时显示状态待确认。文件更新时间用于触发读取和提示最近活动。</p>
+        <p>自动恢复、继续执行和压缩可能包含多个开始或停止信号。采集器按原生轮次与最终事件合并；Codex 的 <code>Stop</code> hook 可以触发继续执行，因此 hook 到达时先保存观察，完成事项以最终终止事件确认。</p>
+      </section>
+
+      <section id="attention">
+        <h2>04 待处理事项直到你确认才清除</h2>
+        <p>待处理事项分别记录“等待回复”“等待授权”“本轮完成”“执行失败”“执行中断”。每项关联会话、轮次和来源事件，重连、重复采集或页面刷新时沿用同一条记录。顶部按尚未处理的会话数量统计，详情中列出各轮事项。</p>
+        <div class="pair">
+          <article>
+            <h3>你查看时</h3>
+            <p>打开卡片或详情抽屉，记录查看时间，提示继续保留。下次切换回来时，顶部仍能找到这条会话。</p>
+          </article>
+          <article>
+            <h3>你确认处理时</h3>
+            <p>“标记已处理”确认当前显示的事项并保存处理时间。按钮绑定这些事项的 ID，新到达的结果继续保留。</p>
+          </article>
+        </div>
+        <p>本轮完成后又开始下一轮，上轮结果仍可待处理。等待请求已经得到回复时标记“已恢复”，保留人的确认状态，便于你看见这段进展。归档会话时同时确认当前显示的待处理事项，并保留可检索历史。</p>
+        <p>首次导入已有历史时，在 Task 中登记旧轮次；首次实时观察起新产生的完成、错误和中断进入待处理。接入当下仍在等待输入的请求也进入列表，避免刚安装就出现大量陈旧提醒。</p>
+      </section>
+
+      <section id="record">
+        <h2>05 Record：随时写，随后再决定怎样使用</h2>
+        <p>Record 是独立保存的内容。所有 agent 都停止、workspace 已关闭或会话未选择时，仍可新建、编辑、搜索和归档。标题可选，默认从第一行生成；正文保存 Markdown，可写普通文字、TODO 清单和长 prompt。</p>
+        <h3>阶段帮助找内容，随时可以修改</h3>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">参考 demo 的阶段</th><th scope="col">具体含义和主要操作</th></tr></thead>
+            <tbody>
+              <tr><td>灵感记录</td><td>快速写下片段。可继续编辑、关联项目、整理或直接归档。</td></tr>
+              <tr><td>整理成熟</td><td>已经开始梳理的 idea、TODO 或 prompt。可长期停留，也可返回灵感记录。</td></tr>
+              <tr><td>就绪待发</td><td>你判断内容已经适合交给 agent。可选目标 agent 或会话；进入 Ready 列表。目标失效时仍可编辑或复制。</td></tr>
+              <tr><td>派发执行</td><td>你已在原工具发送，并手动确认。保存发送时间与当时的正文，执行进展来自可选的会话、轮次关联。</td></tr>
+              <tr><td>归档复盘</td><td>内容暂时收起，仍可搜索、打开和恢复。idea 与 TODO 可以从任一阶段直接归档。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>灵感记录、整理成熟和就绪待发可以自由切换；确认发送后进入派发执行，任一阶段都可以归档或恢复。记录关联项目、来源会话、目标会话和标签均可选。初次创建时只需输入正文；完整编辑器保留 Markdown 预览，随时可以继续整理。</p>
+        <h3>复制与确认发送是两次独立操作</h3>
+        <ol>
+          <li>点击“复制正文”，保持文字、代码块和换行；记录继续保留当前阶段。</li>
+          <li>回到 herdr、终端或 Codex app，粘贴、调整并发送。</li>
+          <li>在 Record 中确认“已发送”，保存此次发送的时间和正文，可选择实际接收的会话与轮次。</li>
+          <li>后续根据结果继续编辑，或创建新记录；已有发送内容保留原样。同一条 Record 可以多次发送，每次各有记录。</li>
+        </ol>
+        <p>如果你在粘贴后改写了内容，确认发送时可以调整此次发送记录，写下实际发送的版本。手动发送带来的会话关联由你确认；上下文和时间相近只作为选择参考。</p>
+        <h3>从结果继续写下一步</h3>
+        <p>会话抽屉提供“基于此处新建 Record”，保存来源会话、轮次或消息位置。新记录保留你选中的文本，项目可预填。你可以先写下问题，再回去确认本轮结果，之后在 Record 工作台整理成下一条 prompt。</p>
+        <p>“派发执行”只说明你已确认发送。关联会话完成时显示结果提示，Record 保留当前阶段，后续整理和归档由你决定。</p>
+      </section>
+
+      <section id="adapters">
+        <h2>06 复用 herdr，补充原生会话与事件</h2>
+        <p>每个来源使用独立采集器，统一输出会话、轮次、消息和状态观察。Herdr 为已有工作方式提供分组与当前会话信息，原生会话文件提供完整预览和检索；需要时添加插件报告身份或等待事件。已有集成继续保留；采集期间，新增采集器把观察结果写入 AgentTV 数据。</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">来源</th><th scope="col">首选方式</th><th scope="col">仍需完成的验证</th></tr></thead>
+            <tbody>
+              <tr><td>herdr</td><td><code>session.snapshot</code> 恢复概况，<code>events.subscribe</code> 接收变化；原生会话身份关联历史，workspace 直接提供归属。socket 路径可配置，服务版本与字段支持分别检测。</td><td>事件订阅、断线重连、会话切换与退出；当前服务未提供 <code>completion_seq</code>，需要用原生轮次事件确认完成。</td></tr>
+              <tr><td>pi</td><td>JSONL 保存会话与消息；复用原生扩展的会话身份和 <code>agent_start</code>、<code>agent_settled</code> 观察。</td><td>扩展中“已停下来”的信号是否覆盖重试、压缩和排队续写；突然退出用进程身份补充。</td></tr>
+              <tr><td>Kimi Code</td><td>读取当前 2.1.1 格式的会话元数据和 <code>agents/main/wire.jsonl</code>。已观察到 <code>agent.turn.started</code>、<code>agent.turn.ended</code>、<code>turn.prompt</code> 和 <code>context.append_message</code>。</td><td>多种事件之间的消息去重、最终完成含义与等待请求；旧格式单独识别。</td></tr>
+              <tr><td>Codex CLI</td><td>原生会话 JSONL 提供消息和执行轮次；现有 herdr 集成提供会话身份。需要时用原生 hook 补充授权等观察，进程身份确认退出。</td><td>实际安装版本与 hook 支持、信任后的生效情况、同目录并发和恢复会话。当前 herdr Codex 集成报告版本过期，尚未改动。</td></tr>
+              <tr><td>Codex desktop</td><td>原生会话 JSONL 的 <code>task_started</code>、<code>task_complete</code>、<code>turn_aborted</code> 按 turn ID 关联；原生会话写入锁与持有进程补充已加载实例的存活观察。</td><td>等待授权与待回复请求、多个会话同时执行、关闭会话和强制结束 app、写入延迟。锁文件存在时还需检查真实锁持有者。</td></tr>
+              <tr><td>Claude Code</td><td>JSONL 提供原始会话和工具记录；结合 herdr 身份信息与官方 hook 观察执行、授权和最终停止。</td><td>停止 hook 后继续执行的情况、普通回复与授权请求、后台工作和强制退出。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Codex desktop 的接口按实际实例判断</h3>
+        <p>本机存在一个可连接的公共 app-server control socket，能读取本项目历史，但该服务返回的已加载会话数量为 0，当前桌面会话状态为 <code>notLoaded</code>。因此它只作为已验证的历史入口，当前桌面执行状态优先研究原生轮次事件与写入锁。</p>
+        <p>本项目样本中，同一个 Codex 宿主同时持有正在执行和本轮已完成的会话锁。执行状态由轮次事件区分；进程仍存活只能补充存活观察。Desktop 的 <code>originator</code> 为 <code>Codex Desktop</code>，<code>source</code> 在样本中出现 <code>vscode</code> 和子会话结构，需要结合元数据识别来源。</p>
+        <p>官方当前 hook 文档提供 <code>SessionStart</code>、<code>UserPromptSubmit</code>、<code>PermissionRequest</code>、<code>Stop</code>、<code>Interrupt</code> 等事件。桌面内置版本与 CLI 版本不同，支持情况要分别验证。hook 只报告观察，沿用原工具的授权、回复和执行过程；正常返回与故障处理也纳入接入验收。</p>
+        <h3>重连后先恢复，再接收变化</h3>
+        <p>采集器保存已读取文件的位置、完整行边界和来源事件身份。文件追加时增量读取；不完整 JSONL 行等下一次写入。文件被截断、替换或格式改变时重新确认身份，完整事件和待处理事项按原生 ID 或稳定来源位置去重。</p>
+        <p>Herdr 事件订阅与快照恢复之间的顺序，需要按当前服务验证。能够先订阅时缓冲变化，再合入快照；缺少可续读序号时补充周期快照检查。断开连接时标记采集状态，重连成功后重新确认活跃会话。</p>
+        <p>轻量插件设置短超时并尽快返回。AgentTV 暂时不可用时，把报告失败记录到本机采集日志，agent 按原流程继续；恢复后从会话文件补读消息，并说明采集曾中断，期间的短暂等待状态可能缺失。</p>
+      </section>
+
+      <section id="evidence">
+        <h2>07 已观察到什么，哪些仍需实测</h2>
+        <p>以下检查完成于 2026-10-14，使用版本命令、现有服务的只读请求、会话数据结构和本项目 Codex 样本。检查输出仅保留字段与事件结构；未改变 workspace、agent 配置或运行进程。</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">检查对象</th><th scope="col">实际结果</th><th scope="col">设计含义</th></tr></thead>
+            <tbody>
+              <tr><td>herdr 版本</td><td>本机 CLI 0.9.4；运行服务快照报告 0.9.1，protocol 22。</td><td>客户端生成的 schema 与运行服务字段需要分别核查，当前设计继续兼容 0.9.1。</td></tr>
+              <tr><td>herdr 快照</td><td>13 个 workspace、6 个 agent；6 个均含 <code>agent_session</code>，workspace 有名称和 ID，样本未提供 cwd 或 worktree。</td><td>直接按 workspace 分组有实际数据依据。外部会话匹配使用明确保存的项目目录。</td></tr>
+              <tr><td>herdr 完成序号</td><td>0.9.4 本机 schema 描述 <code>completion_seq</code>；当前服务样本的 agent 字段均未提供它。</td><td>作为可选能力检测。当前服务需要原生终止事件补充完成与去重。</td></tr>
+              <tr><td>现有 herdr 集成</td><td>pi v9、Kimi v7、Claude v10 报告为当前；Codex v8 报告落后于 v9。</td><td>现有配置保持原样。报告为当前只说明集成版本，具体状态含义仍需验证。</td></tr>
+              <tr><td>Codex 公共服务</td><td>0.162.1。现有 Unix socket 的 WebSocket Upgrade 成功；<code>thread/list</code> 和 <code>thread/read</code> 可读本项目历史，<code>thread/loaded/list</code> 返回 0。</td><td>公共服务的运行状态未代表当前 desktop 的实际执行。</td></tr>
+              <tr><td>Codex desktop 原生样本</td><td>日志元数据报告 <code>0.162.0-alpha.17.2</code>。3 份本项目样本可读：执行中的会话有未终止的 turn；完成和中断样本有对应 turn ID。2 份样本的写入锁由同一 Codex app-server 进程持有。</td><td>基础身份、轮次与宿主关联已有可用线索。样本检查尚未覆盖等待授权、并发切换和强制退出。</td></tr>
+              <tr><td>其他 CLI</td><td>pi 1.2.0、Kimi 2.1.1、Claude Code 2.1.274 的近期会话文件可读，消息与事件结构已核查。</td><td>历史解析可以按当前格式设计；完整生命周期仍需受控验证。</td></tr>
+              <tr><td>中文搜索样例</td><td>SQLite 3.53.0 的内存样例中，FTS5 trigram 匹配“并行任务”、Record、prompt；“想法”“回滚”等双字词需要子串查询。</td><td>长片段使用 trigram，短片段使用子串检索。只验证了匹配行为，尚未进行数据量和性能测试。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">真实 herdr socket 为 <code>/home/shq/.config/herdr/herdr.sock</code>。当前 CLI 环境中的默认路径指向另一目录，返回 server_not_running；只读检查未启动或重启服务。Codex SQLite 元数据使用只读连接读取；最终检查包含 WAL 中的最新数据，执行状态仍依据原生事件。</p>
+      </section>
+
+      <section id="storage">
+        <h2>08 把人的记录和采集结果分别保存</h2>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">保存的数据</th><th scope="col">主要内容</th></tr></thead>
+            <tbody>
+              <tr><td>项目与来源关联</td><td>项目 ID、名称、归档状态、明确关联的目录，herdr workspace 关联及历史变更。</td></tr>
+              <tr><td>会话与轮次</td><td>原生身份、原始名称、别名、来源和目录；每轮的时间、状态与消息位置。</td></tr>
+              <tr><td>消息与工具调用</td><td>用户与助手消息、来源可提供的工具调用和结果、文件与产出引用，完整顺序和原生消息 ID。页面默认收起工具细节。</td></tr>
+              <tr><td>执行观察与读取位置</td><td>实例身份、最近状态来源、读取偏移与来源事件身份，用于恢复和去重。</td></tr>
+              <tr><td>待处理事项</td><td>类型、会话与轮次关联、查看时间、确认时间和所确认的事件身份。</td></tr>
+              <tr><td>Record 与发送记录</td><td>标题、正文、阶段、可选标签与关联、修订号；每次确认发送时的正文、时间和实际接收会话。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>保存成功后，编辑器才显示“已保存”</h3>
+        <p>编辑停止一小段时间后自动保存，切换记录前提交当前编辑。服务提交数据库事务后返回修订号，编辑器再显示“已保存”。多标签页修改同一记录时，提交携带原修订号；发现冲突后保留当前文本，并提供查看另一版本和复制内容的入口。</p>
+        <p>保存失败时，编辑内容继续留在编辑器，显示“保存失败，内容尚未写入本机数据库”，可以重试或复制。页面需要保留未提交内容的本机临时副本，用于意外刷新后的恢复，并显示恢复来源；“已保存”仍只代表服务确认写入。</p>
+        <h3>中文短词也能查</h3>
+        <p>会话与 Record 使用各自的全文索引，统一提供标题和正文搜索、项目与时间筛选。三个及以上字符的片段优先使用 FTS5 trigram；一两个字符或索引无法表达的片段使用字面子串查询，先应用项目、时间等已有筛选，再分页返回完整匹配结果。</p>
+        <p>搜索输入按普通文字处理，匹配大小写规则保持一致，特殊符号按字面检索。开发时补充中文双字词、代码标识符、混合文本和分页测试，再根据实际样本报告延迟。</p>
+        <h3>历史能继续读，缺失部分明确显示</h3>
+        <p>已经采集到的文本保存在本机，原生会话文件移除后仍可检索和预览。图片、附件和特别大的工具输出按来源位置读取；如果来源已不可用，详情显示缺失部分。首版“完整会话”覆盖来源中可获得的消息和工具记录，受来源删除或裁剪影响的部分显示说明。</p>
+        <p>原始会话文件只读。会话别名、归属、Record 和人的处理状态写入 AgentTV 数据库。导出建议提供 Record Markdown 和结构化 JSON；数据库备份使用 SQLite 一致性备份方式，避免运行时只复制主文件造成内容遗漏。</p>
+        <h3>本机网页按已有来源显示内容</h3>
+        <p>服务监听本机回环地址，写入接口校验同源请求。Markdown、工具输出和文件名经过安全渲染；可点击链接限制为允许的协议。展示文件变更时使用来源明确提供的记录，相关信息缺失时说明可用范围。</p>
+        <p>SSE 建立连接后，服务先返回带修订号的当前快照，再发送后续变化。生成快照期间的变化先缓冲，随后按序合入；断线后重新获取快照。网页关闭期间发生的结果保存在服务端，待处理数量从持久数据恢复。</p>
+      </section>
+
+      <section id="delivery">
+        <h2>09 开发顺序同时照顾 Preview 与 Record</h2>
+        <p>整体方案确认后，先完成最影响可用性的接入验证，再进入主体开发。Record 从第一轮可用交付就提供完整写作流程；后续继续接入其他来源时，已经可以随时记下、整理和找回想法。</p>
+        <ol>
+          <li><strong>验证接入。</strong>用隔离样例核查 herdr 事件、五个接入对象的身份、执行、等待、完成与退出；尤其确认 desktop 的逐会话状态。发现能力缺口时先说明具体行为和可选方案。</li>
+          <li><strong>交付两条可用流程。</strong>实现项目持久保存、独立 Record 的捕捉、编辑、搜索、Ready、复制与恢复，同时实现 herdr workspace 分组和已验证来源的 Live / Task / 待处理。</li>
+          <li><strong>补齐五个接入对象。</strong>完成各来源的历史、会话去重和生命周期；GUI 用真实内容完善卡片、详情和编辑工作台。</li>
+          <li><strong>完成恢复与长期使用检查。</strong>验证采集重连、强制退出、多标签页保存、中文检索、导出和备份，随后提供本机启动方式。</li>
+        </ol>
+        <p>接入验证使用本项目的临时样例和用户可见的测试会话，保留现有工作的运行方式。涉及添加 hook 时先准备可查看的插件与配置，具体安装按原工具要求完成。</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">验收场景</th><th scope="col">需要看到的结果</th></tr></thead>
+            <tbody>
+              <tr><td>首次打开</td><td>显示 herdr 现有 workspace 分组；其中会话正确关联，Record 全局收件箱可立即使用。</td></tr>
+              <tr><td>同目录的两个 workspace</td><td>herdr 内会话按实际 workspace 区分；外部会话在目录无法唯一确定时保持未分类，可手动归属。</td></tr>
+              <tr><td>workspace 关闭、重命名或重新关联</td><td>会话与 Record 继续能找到；已有项目身份不因展示名称改变而丢失。</td></tr>
+              <tr><td>五个接入对象并行</td><td>pi、Codex CLI、desktop、Kimi、Claude 分别显示实际轮次状态；同目录并发和多来源读取保持正确身份。</td></tr>
+              <tr><td>长时间无输出</td><td>仍在执行的轮次继续显示执行中；最近观察与采集状态清楚可见。</td></tr>
+              <tr><td>等待授权或回复</td><td>明确的等待请求进入待处理；原工具恢复后记录恢复信息，确认状态由你决定。</td></tr>
+              <tr><td>kill、正常退出与连接断开</td><td>确认退出时移出 Live，历史与待处理保留；采集断开时显示待确认，重连后恢复。</td></tr>
+              <tr><td>查看、确认与同时到达的新结果</td><td>查看后继续提示；确认只影响所见事项，新结果继续提示；服务重启后不重复创建旧事项。</td></tr>
+              <tr><td>零个 agent 的 Record 工作</td><td>可快速记录、写长文与 TODO、搜索中文、整理、归档和恢复；项目与会话均可不选。</td></tr>
+              <tr><td>复制、发送与继续修改</td><td>复制保持原阶段；手动确认发送后保留当时的正文，后续修改保留发送记录。</td></tr>
+              <tr><td>刷新、保存失败与多标签页</td><td>已保存内容恢复；失败时保留编辑文本；冲突时能找到两份内容并继续处理。</td></tr>
+              <tr><td>原生文件消失、消息重复或只写了一半</td><td>已采集文本可预览，缺失附件有说明；重复消息合并，不完整行在完整后继续读取。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">建议验收目标：来源事件已到达后，页面在 2 秒内更新；进程身份已确认消失后，5 秒内移出 Live。它们是开发目标，尚未测得端到端结果。来源本身的写入延迟另行测量，搜索性能以实际会话规模报告。</p>
+      </section>
+
+      <section id="discussion">
+        <h2>10 进入开发前需要确定的方案</h2>
+        <div class="review-box">
+          <p><strong>归属：</strong>首版按一个 herdr workspace 对应一个 AgentTV 项目；外部会话用明确目录匹配，Record 支持独立收件箱和可选项目。</p>
+          <p><strong>技术：</strong>Rust 服务、SQLite 保存、Svelte + TypeScript 网页；首版继续手动复制发送，以 demo 作为 GUI 主要参考。</p>
+          <p><strong>接入：</strong>五个对象都属于首版目标。Desktop 的原生事件与写入锁已有可用样本，等待和退出仍需受控验证。完成整体方案讨论后，先核查这些行为，再决定接入实现细节。</p>
+        </div>
+        <p>后续开发使用 <a href="harness.html">项目 harness</a>记录计划、检查结果和关键场景。当前先建立这些开发工具，产品实现按 <a href="plans/first-delivery.html">首轮计划</a>推进。像素尺寸、具体控件和动画继续放到实际开发时完善。</p>
+        <p class="small">文档用项目 plain-docs 技能润色。dskills 配置为 no-track，Codex、Kimi、pi 共用 <code>.agents/skills</code>，Claude 使用 <code>.claude/skills</code>。本次只使用主 agent，未启动子 agent。</p>
+      </section>
+
+      <section id="sources">
+        <h2>资料来源与检查范围</h2>
+        <ol class="sources">
+          <li><a href="discovery.html">需求与设计讨论稿</a>：已确认需求、GUI demo 方向与 GitHub 调研。</li>
+          <li>本机只读观察：herdr CLI 版本与生成 schema、现有服务 <code>session.snapshot</code>、集成版本报告；各 agent 会话事件结构；本项目 Codex 原生轮次与进程写入锁。2026-10-14 核查。</li>
+          <li><a href="https://github.com/herdrdev/herdr/blob/master/docs/versions/0.9.1/website/src/content/docs/socket-api.mdx">Herdr 0.9.1 Socket API</a>：快照与事件订阅。实际字段以运行服务为准。</li>
+          <li><a href="https://learn.chatgpt.com/docs/app-server">OpenAI：Codex app-server</a>：Unix socket 的 WebSocket 传输，<code>thread/read</code>、<code>thread/list</code>、已加载会话与执行事件。</li>
+          <li><a href="https://learn.chatgpt.com/docs/hooks">OpenAI：Codex hooks</a>：生命周期事件、等待授权、停止后继续执行、hook 信任与版本范围。官方当前资料不能替代桌面内置版本的实际验证。</li>
+          <li><a href="https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/core/extensions/types.ts">Pi 扩展定义</a>、<a href="https://github.com/moonshotai/kimi-code/blob/main/docs/en/guides/sessions.md">Kimi Code 会话资料</a>、<a href="https://github.com/anthropics/claude-code/blob/v2.1.274/plugins/plugin-dev/skills/hook-development/references/patterns.md">Claude Code hook 示例</a>：接入方向按本机版本进一步验证。</li>
+          <li><a href="https://docs.rs/axum/latest/axum/response/sse/index.html">Axum SSE</a>、<a href="https://svelte.dev/docs/svelte/overview">Svelte</a>、<a href="https://docs.rs/rusqlite/latest/rusqlite/">rusqlite</a>：建议的服务与网页组件资料。</li>
+          <li><a href="https://www.sqlite.org/fts5.html#the_trigram_tokenizer">SQLite FTS5 trigram</a>：子串索引与短查询限制。匹配样例已验证，性能尚未测量。</li>
+        </ol>
+      </section>
+    
+      <nav class="pager" aria-label="相邻文档"><a href="discovery.html">← 需求与 GUI 方向</a><a href="harness.html">开发 Harness →</a></nav>
+      <footer>AgentTV 项目文档 · 本机阅读与打印</footer>
+    </main>
+  </div>
+</body>
+</html>

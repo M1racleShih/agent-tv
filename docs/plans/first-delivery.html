@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="agenttv:plan-status" content="planned">
+  <title>AgentTV · 首轮产品开发计划</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <header class="top"><a href="../discovery.html">AgentTV <span>项目文档</span></a><span class="revision">首轮产品开发 · 待开始</span><button type="button" class="print" onclick="window.print()">打印本页</button></header>
+  <div class="shell">
+    <nav class="sidebar" aria-label="文档导航"><details open><summary>目录</summary><p class="nav-group">项目设计</p><a href="../discovery.html">需求与 GUI 方向</a><a href="../implementation.html">接入与数据设计</a><p class="nav-group">开发与计划</p><a href="../harness.html">开发 Harness</a><a aria-current="page" href="first-delivery.html">首轮开发计划</a><a href="template.html">开发计划模板</a></details></nav>
+    <main id="main">
+      <header class="page-head">
+        <div class="eyebrow">2026-10-14 创建 · 产品代码尚未创建</div>
+        <h1>交付可写 Record、可看真实进展的首个版本</h1>
+        <p class="lead">先验证影响状态准确性的来源，再把独立 Record 和最小 Preview 做到可以日常使用。首轮保留五个接入对象的目标，按实际验证结果逐步接入。</p>
+      </header>
+      <nav class="toc" aria-label="本页目录"><b>本页内容</b><ul><li><a href="#purpose">01 目标与范围</a></li><li><a href="#progress">02 进度与步骤</a></li><li><a href="#decisions">03 已知事实与决定</a></li><li><a href="#validation">04 验证与验收</a></li><li><a href="#recovery">05 重试与恢复</a></li><li><a href="#outcomes">06 结果与剩余工作</a></li></ul></nav>
+      <section id="purpose">
+        <h2>01 目标与范围</h2>
+        <p>用户在 Ubuntu 本机网页随时写 idea、TODO 和 prompt，保存后能找回；同时按 herdr workspace 查看会话、最新进展与待处理结果。发送继续使用手动复制粘贴，GUI 采用用户 demo 的 Preview / Record 主工作区和共享项目栏。</p>
+        <p>相关设计见 <a href="../implementation.html#ownership">workspace 归属</a>、<a href="../implementation.html#sessions">会话与状态</a>、<a href="../implementation.html#record">Record 流程</a>和<a href="../discovery.html#pages">GUI 方向</a>。当前已有设计文档与开发 harness，产品源码、测试样例和运行入口等待本计划开始后创建。</p>
+      </section>
+      <section id="progress">
+        <h2>02 按可验证的结果推进</h2>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动"><table>
+          <thead><tr><th scope="col">步骤与状态</th><th scope="col">要完成的工作与可观察结果</th></tr></thead>
+          <tbody>
+            <tr><td>1 · 待开始<br>建立接入样例</td><td>在 <code>tests/fixtures</code> 创建带格式来源说明的合成记录。按需要建立 domain 和 adapters，提供可运行的重放入口，验证 workspace、轮次与实例身份。实际安装版本使用独立测试会话核查，尤其是 desktop 的等待、并发和退出。</td></tr>
+            <tr><td>2 · 待开始<br>提供独立 Record</td><td>建立 storage、server 与 web。实现快速记录、编辑、自动保存、中文搜索、归档、Ready 与复制；已保存内容在刷新和重启后恢复。所有 agent 停止时仍可使用。</td></tr>
+            <tr><td>3 · 待开始<br>连接最小 Preview</td><td>读取 herdr workspace 和原生会话，提供 Live 卡片、Task 索引和详情。执行观察、人的确认与历史分别保存；查看结果后仍能找到待处理入口。</td></tr>
+            <tr><td>4 · 待开始<br>补齐来源与恢复</td><td>完成 pi、Codex CLI、desktop、Kimi、Claude 的适配，验证重复事件、断线、会话恢复与实例退出，逐项更新场景命令。</td></tr>
+            <tr><td>5 · 待开始<br>检查实际使用</td><td>用真实长度的合成内容完善 GUI，实际操作保存、复制、搜索和确认流程。记录真实接入、页面观察、自动检查结果和仍有的限制。</td></tr>
+          </tbody>
+        </table></div>
+        <p>创建各包时采用 <a href="../harness.html#architecture">harness 的 Rust 分层</a>，同时保存依赖锁文件和工具链版本。较大步骤可拆成独立计划，保持本页进度反映整体可用结果。</p>
+      </section>
+      <section id="decisions">
+        <h2>03 已知事实与当前决定</h2>
+        <p><strong>2026-10-14 · 归属：</strong>首版默认一个 herdr workspace 对应一个 AgentTV 项目。外部会话匹配明确关联的目录，歧义保留未分类；Record 保留全局收件箱。</p>
+        <p><strong>2026-10-14 · 实现：</strong>采用 Rust / Tokio / Axum、SQLite 与 Svelte / TypeScript。本机数据独立保存，服务可以在浏览器关闭后继续采集。</p>
+        <p><strong>2026-10-14 · 来源：</strong>本机 herdr CLI 和正在运行的服务版本不同；desktop 公共 app-server 可读历史，实际执行需要研究原生轮次与锁信息。现有样本见 <a href="../implementation.html#evidence">本机观察</a>，尚未完成全部生命周期实测。</p>
+        <p><strong>2026-10-14 · 验证：</strong>普通检查使用合成来源和临时数据，真实接入独立验证。影响需求覆盖的能力缺口带具体观察回到方案讨论。</p>
+      </section>
+      <section id="validation">
+        <h2>04 以场景验证每一步</h2>
+        <p>开发前运行 <code>python3 scripts/harness.py doctor</code>；每步实现后按影响运行 <code>python3 scripts/harness.py check</code>。对照 <a href="../../harness/cases.json">关键场景目录</a>，补充能实际失败和通过的自动命令。</p>
+        <p>接入先覆盖 workspace-01/02、preview-01/02/03 和 attention-01/02；Record 覆盖 record-01/02/03/04；历史、中文检索和安全渲染覆盖 search-01/02 与 rendering-01。当前这些产品场景均未登记自动命令。</p>
+        <p>产品工程提供可指定数据目录、来源模式和监听端口的启动方式，成功后输出实际访问地址。网页使用该实例执行界面检查。具体产品命令与接口在实现后写回此处；当前可执行入口仅为 harness。</p>
+        <p>整个首版交付前运行 <code>python3 scripts/harness.py check --scope product</code>，并列出五个来源的实际生命周期结果和页面使用记录。当前运行严格产品检查应返回失败，说明产品工程和场景测试仍未创建。</p>
+      </section>
+      <section id="recovery">
+        <h2>05 使用独立数据，重跑保留来源</h2>
+        <p>样例使用合成 ID 与正文，原生真实记录保持只读。开发和测试的数据目录明确指定为本项目临时目录；测试清理仅涉及本次创建的数据和进程。</p>
+        <p>导入程序保存读取位置和来源身份，重跑时去重。数据库格式变化使用迁移与一致性备份；失败保留诊断信息和已保存的 Record。首次真实接入前检查只读来源和临时写入目录是否实际生效。</p>
+        <p>代理或连接失败按当前用户环境处理，保留具体错误。采集连接断开时页面显示最后观察与待确认状态，恢复后重取快照。</p>
+      </section>
+      <section id="outcomes">
+        <h2>06 结果与剩余工作</h2>
+        <p>当前产品计划处于待开始状态。已具备需求与接入设计、共享 agent 入口、harness 检查程序及场景目录；产品能力等待各步骤实现和验证。</p>
+        <p>下一轮从接入样例与可执行重放开始，同时保持 Record 的独立可用目标。每个阶段完成后在这里记录实际结果、检查范围、尚未验证内容和下一步。</p>
+      </section>
+    
+      <nav class="pager" aria-label="相邻文档"><a href="../harness.html">← 开发 Harness</a><a href="template.html">开发计划模板 →</a></nav>
+      <footer>AgentTV 项目文档 · 本机阅读与打印</footer>
+    </main>
+  </div>
+</body>
+</html>

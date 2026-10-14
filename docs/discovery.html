@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>AgentTV · 需求与设计讨论稿</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <header class="top"><a href="discovery.html">AgentTV <span>项目文档</span></a><span class="revision">需求与设计讨论稿 · v0.3</span><button type="button" class="print" onclick="window.print()">打印本页</button></header>
+  <div class="shell">
+    <nav class="sidebar" aria-label="文档导航"><details open><summary>目录</summary><p class="nav-group">项目设计</p><a aria-current="page" href="discovery.html">需求与 GUI 方向</a><a href="implementation.html">接入与数据设计</a><p class="nav-group">开发与计划</p><a href="harness.html">开发 Harness</a><a href="plans/first-delivery.html">首轮开发计划</a><a href="plans/template.html">开发计划模板</a></details></nav>
+    <main id="main">
+      <header class="page-head">
+        <div class="eyebrow">2026-10-14 修订 · Ubuntu 24.04 · 本机网页</div>
+        <h1>AgentTV：看见进展，随时记录想法</h1>
+        <p class="lead">你同时推进多个项目，需要一处查看各个 agent 的进展和待处理结果，也需要一处随时写下、整理和找回 idea、TODO 与 prompt。Preview 和 Record 是并列的两个核心功能。</p>
+        <div class="badges">
+          <span class="badge confirmed">自研方向已确认</span>
+          <span class="badge confirmed">核心使用方式已确认</span>
+          <span class="badge confirmed">GUI 以你的 demo 为参考</span>
+          <span class="badge proposed">技术方案待确认</span>
+        </div>
+        <p class="small">本文区分已确认需求、设计建议和待验证能力。GUI 以你提供的 demo 为主要参考；本次补充 workspace 优先归属与本机接入结果。具体技术选择、数据行为和验收目标见 <a href="implementation.html">接入与数据设计</a>。产品开发安排在整体方案确认之后。</p>
+      </header>
+      <nav class="toc" aria-label="本页目录"><b>本页内容</b><ul><li><a href="#decisions">01 已确认的方向</a></li><li><a href="#core">02 Preview 与 Record</a></li><li><a href="#pages">03 页面与使用流程</a></li><li><a href="#record-sketch">Record 工作台</a></li><li><a href="#behavior">04 状态、项目与检索</a></li><li><a href="#implementation">05 自研接入方案</a></li><li><a href="#research">06 GitHub 调研</a></li><li><a href="#acceptance">07 验收场景</a></li><li><a href="#next">08 下一步需要确认</a></li><li><a href="#sources">资料来源</a></li></ul></nav>
+      <p class="small document-note">文档参考 fpga-protocol 的 Catppuccin Latte 浅色风格。产品 GUI 以你提供的 demo 为主要参考，具体细节在实际开发时完善。</p>
+
+      <section id="decisions">
+        <h2>01 已确认的方向</h2>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">事项</th><th scope="col">已确认的选择</th></tr></thead>
+            <tbody>
+              <tr><td>产品方向</td><td>自研 AgentTV。现有产品的审美与需求覆盖未达到你的预期，公开工具作为接入与设计参考。</td></tr>
+              <tr><td>运行环境</td><td>首版面向单机 Ubuntu 24.04，使用本机网页，数据保存在本机。</td></tr>
+              <tr><td>接入对象</td><td>pi、Codex CLI、Codex desktop、Kimi Code、Claude Code。</td></tr>
+              <tr><td>现有工作方式</td><td>继续从 herdr、终端和 Codex app 启动与操作 agent。允许使用轻量插件、hook 或启动包装提供观察信号。</td></tr>
+              <tr><td>Preview 内容</td><td>最新进展与可搜索的完整会话，工具调用可展开。首版的页面预览以会话内容为主。</td></tr>
+              <tr><td>任务单位</td><td>一条 agent 会话对应一个任务索引。保留原始标题，允许在 AgentTV 中设置易于检索的名称。</td></tr>
+              <tr><td>进程退出</td><td>agent 被 kill 后从 Live 监控墙移除，历史会话继续可检索、预览。</td></tr>
+              <tr><td>待处理事项</td><td>完成、报错、等待输入的事项持续保留。点开预览后仍保留，直到你明确标记已处理或归档。</td></tr>
+              <tr><td>Record</td><td>随时记录、管理 idea、TODO 与 prompt。项目和会话关联可选；所有 agent 停止时仍可独立使用。</td></tr>
+              <tr><td>发送方式</td><td>整理好 prompt 后手动复制，粘贴到选定 agent。你可以先根据结果调整内容。</td></tr>
+              <tr><td>GUI 参考</td><td>以你提供的 <code>/home/shq/opensource/agents/AgentTV/index.html</code> 为主要参考：Preview、Record 两个主工作区，共用项目栏。demo 用于表达期望的界面形态，具体 GUI 细节在实际开发时完善。</td></tr>
+              <tr><td>语言与文档</td><td>自研优先使用 Rust。方案与设计使用 HTML，文档保持清楚易读。GUI 参照 demo 的深色与蓝色风格，文档继续使用 Catppuccin 配色。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">首版范围之外的方向包括多机聚合、统一启动 agent、自动发送 prompt、完整终端画面，以及一个人工任务关联多个会话。它们可以在后续需要时单独讨论。</p>
+      </section>
+
+      <section id="core">
+        <h2>02 两个并列的核心功能</h2>
+        <div class="pair">
+          <article>
+            <h3>Preview：知道工作推进到了哪里</h3>
+            <p>按项目查看活跃会话、执行状态和最新消息。某个会话需要你回复或已经给出结果时，保留待处理标记，从顶部入口可以找到。</p>
+            <p>以后可以按项目、agent、任务名称和会话内容检索，打开原来的工作记录，继续处理或复盘。</p>
+          </article>
+          <article>
+            <h3>Record：随时记下并管理想法</h3>
+            <p>有想法时马上写下来；一条记录可以是几句话、TODO 清单或长 prompt。写作时可以暂时不选择项目，也不选择 agent。</p>
+            <p>以后再编辑、搜索、分类、归档，或整理成待发送 prompt。记录本身有价值，可以长期保留。</p>
+          </article>
+        </div>
+        <h3>建议首版把 Record 做到这些程度</h3>
+        <ul>
+          <li><strong>入口随时可见。</strong>顶部始终提供“快速记录”；切换到 Record 后使用完整工作台，集中整理全部记录。</li>
+          <li><strong>写完能找回来。</strong>自动保存，明确显示保存状态；刷新页面、重启服务后保留已保存内容。</li>
+          <li><strong>形式自由。</strong>正文支持 Markdown 文本与 TODO 清单；标题可选，可从第一行生成默认名称。</li>
+          <li><strong>管理方便。</strong>支持编辑、搜索、项目筛选和归档；标签建议作为轻量的可选分类方式。</li>
+          <li><strong>随时可以准备下一步。</strong>记录可关联项目、agent 类型或具体会话，也可以保持未关联。</li>
+          <li><strong>发送过程可控。</strong>整理好的记录可以标为“就绪待发”，复制后仍保留。确认粘贴并发送之后，由你标记已发送，可选择关联会话跟踪结果。</li>
+        </ul>
+        <div class="callout"><p>Record 的验收需要单独进行：即使一个 agent 都没有启动，你也能完成记录、修改、查找、整理与恢复已保存内容。</p></div>
+      </section>
+
+      <section id="pages">
+        <h2>03 按你的 demo 组织工作区</h2>
+        <p>主要 GUI 参考为 <code>/home/shq/opensource/agents/AgentTV/index.html</code>。你已明确，这是一份表达期望样子的 GUI demo，具体界面和交互细节在实际开发时完善。本节记录它的布局、使用流程和视觉方向。</p>
+        <div class="callout"><p>顶层采用两个并列工作区：<strong>Preview 监控、Record 工作台</strong>。两者共用左侧项目栏、顶部搜索与快速记录入口。等待输入、待 Review 和 Ready 作为顶部的数量提示与快捷入口。</p></div>
+        <h3>Preview：项目分组的监控墙与任务索引</h3>
+        <p>Preview 内部切换“Live 监控墙”和“Task 索引与复盘”。Live 按项目分组排列 agent 卡片，便于扫视多个并行任务。卡片呈现 agent、模型、宿主、任务名称、状态与最新消息；需要处理的结果保持醒目。</p>
+        <p>Task 索引以表格检索已发现的会话，包括运行中、结束和归档的历史。点击卡片或索引行，从右侧打开详情抽屉，查看原始 prompt、会话内容、产出与已有的文件变更信息，关闭后继续处理原来的项目。顶部全局搜索用于任务、agent 与输出关键字检索。</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">界面区域</th><th scope="col">采用的布局与用途</th></tr></thead>
+            <tbody>
+              <tr><td>顶部全局栏</td><td>Preview / Record 切换、搜索、快速记录，以及 Running、等待输入、待 Review、Ready 数量。点击相应入口查看需要处理的内容。</td></tr>
+              <tr><td>共享项目栏</td><td>建议默认导入 herdr workspace 作为项目分组，显示已关联目录与关注事项数量；保留创建项目、关联目录的能力。切换工作区时保留选择。</td></tr>
+              <tr><td>Live 监控墙</td><td>按项目分组的卡片网格，结合 agent 筛选与状态筛选。卡片展示最新消息和产出入口，具体密度随可用宽度调整。</td></tr>
+              <tr><td>Task 索引与复盘</td><td>Preview 内的表格视图，展示任务名称、项目、agent、模型与时间信息，支持检索和打开详情。</td></tr>
+              <tr><td>详情抽屉</td><td>从右侧打开，查看会话与结果；可基于结果创建一条 Record，保留源会话关联。</td></tr>
+              <tr><td>快速记录</td><td>在任一主工作区从顶部打开轻量输入窗口；项目可选，填写想法后保存到 Record。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3 id="record-sketch">Record：完整的写作与整理工作台</h3>
+        <p>进入 Record 后，左侧项目栏继续保留；中间是记录列表，右侧是完整编辑工作台。记录列表支持阶段与内容搜索，编辑区呈现标题、可选项目、来源关联、正文和 Markdown 预览。常用操作随当前记录阶段显示。</p>
+        <p>阶段名称参考 demo：<strong>灵感记录 → 整理成熟 → 就绪待发 → 派发执行 → 归档复盘</strong>。idea 与 TODO 可以长期保留，也可以反复整理、回退或直接归档。记录是否交给 agent 执行由你决定。</p>
+        <p><a href="implementation.html#record">Record 详细设计</a>说明各阶段和发送记录。“派发执行”沿用已有发送约定：手动复制到原工具，确认实际发送后记录状态；会话关联用于跟踪结果。demo 展示的一键投递能力在后续讨论中另定。</p>
+        <h3>两个工作区怎样配合</h3>
+        <ol class="flow">
+          <li><span class="num">1 · 观察</span>扫视项目监控墙<small>查看任务状态与最新消息，从顶部找到等待输入和待 Review 的会话。</small></li>
+          <li><span class="num">2 · 记录</span>随时捕捉新想法<small>顶部快速记录，之后在 Record 中继续写作和整理，项目关联可选。</small></li>
+          <li><span class="num">3 · 跟进</span>从结果继续准备下一步<small>在详情抽屉查看结果，基于结果创建关联 Record，明确确认已处理事项。</small></li>
+          <li><span class="num">4 · 使用</span>将成熟内容交给 agent<small>在 Record 中复制 prompt，回到原工具发送，需要时关联执行会话。</small></li>
+        </ol>
+        <h3>视觉方向采用 demo 的表达</h3>
+        <p>GUI 采用近黑背景、深蓝面板、清楚的卡片边界与蓝色操作强调。项目使用小范围的色点区分，agent 使用统一的中性徽章，运行、等待输入、待 Review 与异常由状态色表达。界面以便于扫视任务的紧凑布局为主，Record 为连续写作提供空间。</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">demo 中的颜色</th><th scope="col">用途</th></tr></thead>
+            <tbody>
+              <tr><td><code>#090b10</code></td><td>主背景</td></tr>
+              <tr><td><code>#11151f</code> / <code>#161b28</code></td><td>面板与卡片层次</td></tr>
+              <tr><td><code>#232a3d</code></td><td>边界与分隔</td></tr>
+              <tr><td><code>#3b82f6</code></td><td>主要操作与选中状态</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">以上颜色来自 demo 的样式定义，用于记录视觉方向。卡片尺寸、字体、信息密度、动画、快捷键与编辑区分栏，在实际开发时结合真实内容完善。原 demo 的源码保持原样。</p>
+        <p class="small">本次布局分析所据 demo 的 SHA-256：<code>80ec686ec747d7c1e0f25654a462757630082734fd8bb7428a871c8540d7069a</code>。该校验值用于识别参考版本，文件路径见本节开头。</p>
+        <h3>demo 中的展示信息怎样对应真实功能</h3>
+        <p>布局与使用流程作为主要参考。数据与操作仍按已确认需求设计，以下细节在实际接入和开发时落实。</p>
+        <ul>
+          <li><strong>进度百分比。</strong>实际版本依据上游真实进度显示；有活动记录而缺少可计算进度时，展示最新进展、运行时长和观察时间。</li>
+          <li><strong>模拟 Kill。</strong>demo 用它演示 agent 退出后卡片移除。首版继续观察原工具中的进程退出，历史与已有待处理事项保留。</li>
+          <li><strong>一键派发。</strong>demo 用它表达记录与接收会话的关系。首版发送方式沿用手动复制与确认，后续可单独讨论直接投递。</li>
+          <li><strong>待 Review。</strong>实际版本保存人的处理状态；查看或关闭抽屉后，提示继续保留。已退出的会话仍能从顶部关注入口与 Task 索引找到。</li>
+          <li><strong>摘要与变更。</strong>以已采集内容提供最新消息、产出和文件信息，完整会话可以展开。摘要生成方式和可提供的数据在接入验证后确定。</li>
+          <li><strong>数据恢复。</strong>Record、历史和待处理事项按本机持久保存设计；真实版本的保存状态与恢复能力需要独立验证。</li>
+        </ul>
+      </section>
+
+      <section id="behavior">
+        <h2>04 状态、项目与检索怎样工作</h2>
+        <h3>执行状态与人的处理状态分别保存</h3>
+        <p>agent 的一轮执行可能已经结束，而你还没处理结果。看板显示会话当前在做什么，同时保留需要你处理的事项。</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">发生的情况</th><th scope="col">建议的显示与保存行为</th></tr></thead>
+            <tbody>
+              <tr><td>正在执行</td><td>显示在 Live 监控墙，展示最新进展与观察时间。长时间没有输出时继续依据执行信号判断状态。</td></tr>
+              <tr><td>等待回复、授权或处理错误</td><td>会话保持可见，并生成待处理事项。首版由你在原工具里回复或授权。</td></tr>
+              <tr><td>本轮完成，agent 仍然存活</td><td>会话显示为等待下一步或空闲，本轮结果进入待处理。这里的“完成”描述本轮执行。</td></tr>
+              <tr><td>你点开预览</td><td>记录已查看，待处理事项继续保留。</td></tr>
+              <tr><td>你确认已处理或归档</td><td>清除相应待处理标记，保留处理记录和会话历史。后续新一轮结果可以再次产生待处理事项。</td></tr>
+              <tr><td>agent 被 kill 或正常退出</td><td>从 Live 监控墙移除，历史和已有待处理事项保留。执行中退出时，建议额外标记“执行中断”，供你检查。</td></tr>
+              <tr><td>采集连接断开或身份无法确认</td><td>显示“状态待确认”或“采集连接断开”，保留最后观察时间。这种情况需要与已确认退出分别处理。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>待处理事项建议按会话聚合，并保留对应执行轮次。多次事件可以合并成一个会话入口；下一轮开始后，上轮尚未确认的结果继续保留。</p>
+        <h3>Record 的状态服务于整理</h3>
+        <p>Record 的阶段表达参考 demo 的“灵感记录、整理成熟、就绪待发、派发执行、归档复盘”。这些阶段帮助你寻找和整理内容；idea 与 TODO 可以长期保存、回退或直接归档。复制后保留正文与当前阶段；你确认实际发送后，再记录发送状态、当时的正文和可选会话关联。关联会话的完成结果提供提示，Record 后续阶段由你选择。</p>
+        <h3>默认沿用 herdr workspace，外部会话匹配明确目录</h3>
+        <p>按你提出的方向，建议首版采用一个 herdr workspace 对应一个项目，左栏沿用已有名称和分组。Herdr 内的会话直接使用 workspace 归属。Codex desktop 和独立 CLI 使用你关联的目录匹配项目；目录重叠时选择更具体的路径，同一路径对应多个项目时先保留在“未分类”。你可以手动调整会话归属。</p>
+        <p>本机运行服务的 workspace 快照有名称和 ID，样本未提供统一目录，因此目录需要明确关联。AgentTV 保存自己的项目 ID 和 herdr 关联，workspace 关闭或重命名后，历史与 Record 仍可找到。身份和重连规则见 <a href="implementation.html#ownership">workspace 归属设计</a>。</p>
+        <p>Record 可选择项目，也可留在全局收件箱。关联项目、会话的操作在 AgentTV 中保存，原始会话文件保持只读。后续仍可创建仅在 AgentTV 中使用的项目，承载代码、文档或团队工作。</p>
+        <h3>以会话身份检索，名称可以调整</h3>
+        <p>建议使用 agent 类型、来源数据目录和原生会话 ID 识别同一会话；herdr 和原生文件读取到同一会话时合并展示。Codex CLI 与 desktop 的同一原生会话合并，启动工具作为来源保存。会话名称使用原生标题，缺少标题时使用首条用户消息的预览，你可以在 AgentTV 中设置别名。</p>
+        <p>会话检索覆盖名称、正文、项目、agent 与时间。Record 检索覆盖标题、正文、项目和状态。中文片段检索需要纳入实际验证。</p>
+      </section>
+
+      <section id="implementation">
+        <h2>05 自研怎样接入现有工具</h2>
+        <p>建议由 Rust + Tokio / Axum 负责采集和本地 HTTP 服务，SQLite 保存会话索引、待处理事项与 Record，Svelte + TypeScript 网页负责查看和编辑，SSE 推送状态变化。关闭浏览器时，采集服务继续保存进展。选择原因和数据恢复方式见 <a href="implementation.html">接入与数据设计</a>，技术方案等待整体确认。</p>
+        <h3>先复用可靠的信号，再补充各 agent 的观察方式</h3>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">来源</th><th scope="col">建议接入方式</th><th scope="col">仍需验证</th></tr></thead>
+            <tbody>
+              <tr><td>herdr 中的会话</td><td>已读取运行服务的 <code>session.snapshot</code>，获取 workspace、当前 agent 与原生会话关联；后续用 <code>events.subscribe</code> 接收变化。</td><td>CLI 是 0.9.4，运行服务是 0.9.1。事件订阅、断线重连、退出与缺少完成序号时的补充方式仍需验证。</td></tr>
+              <tr><td>herdr 外的 CLI</td><td>读取原生会话文件，使用轻量 hook、pi 扩展或启动包装报告会话身份和执行事件；进程检查补充突然退出的判断。</td><td>如何把每个执行实例准确关联到会话，如何处理切换会话、强制退出和 PID 重用。</td></tr>
+              <tr><td>pi</td><td>原生扩展提供会话与 agent 生命周期事件；历史使用 JSONL 会话记录。具体事件按安装版本确认。</td><td>自动重试、排队续写或压缩期间，哪个事件表示这一轮工作确实结束。</td></tr>
+              <tr><td>Kimi Code</td><td>当前安装版本为 2.1.1。官方资料说明 <code>state.json</code>、<code>session_index.jsonl</code> 与 <code>agents/*/wire.jsonl</code> 保存元数据及事件。</td><td>新旧会话格式差异、等待授权与执行结束事件的准确含义。首选读取已有记录与 hook 信号。</td></tr>
+              <tr><td>Codex CLI</td><td>读取会话记录，并核查当前版本的生命周期 hook 或可观察执行信号；与 herdr 来源合并。</td><td>同目录并发会话的准确关联，以及完成、等待授权、报错和强制退出的区别。</td></tr>
+              <tr><td>Codex desktop</td><td>本项目原生记录已有开始、完成和中断事件，含 turn ID；写入锁能关联到持有会话的 Codex 进程。公共 app-server 可读历史，当前会话在其中为 <code>notLoaded</code>。</td><td><strong>优先验证项：</strong>原生事件与写入锁结合后的多会话状态、等待输入与授权、强制退出和观察延迟。</td></tr>
+              <tr><td>Claude Code</td><td>结合原生会话 JSONL、官方 hook 或现有 herdr 集成，获得执行与等待输入信号。</td><td>授权请求、普通回复和后台工作如何区分；异常退出是否留下足够的状态记录。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Herdr 的状态也有不同来源。已安装的 pi 扩展包含生命周期观察；Claude Code 与 Codex 集成中的脚本主要报告会话身份，状态仍可能依据终端文本判断。AgentTV 保存状态来源，并用原生事件验证完成与等待输入的含义。0.9.4 schema 中的 <code>completion_seq</code> 在当前 0.9.1 服务样本中未提供，设计按可选字段处理。</p>
+        <p class="small">Herdr 接口依据 <a href="https://github.com/herdrdev/herdr/blob/master/docs/versions/0.9.1/website/src/content/docs/socket-api.mdx">0.9.1 socket 文档</a>与运行服务快照；Codex 接口依据 <a href="https://learn.chatgpt.com/docs/app-server">官方 app-server 文档</a>与本项目原生样本；Kimi 存储依据 <a href="https://github.com/moonshotai/kimi-code/blob/main/docs/en/guides/sessions.md">官方会话资料</a>。检查结果及其范围见 <a href="implementation.html#evidence">本机验证记录</a>。</p>
+        <div class="callout"><p>“文件最近更新”只能证明最近有内容写入。kill 后及时移除，需要会话身份与存活信号；Codex desktop 的状态需要对应实际执行该会话的实例。新启动一个独立 app-server 的状态不能直接代表现有桌面实例。</p></div>
+        <h3>数据保存与恢复</h3>
+        <p>建议分别保存项目、会话、会话消息、执行观察、待处理事项与 Record。会话历史与实时观察相互关联；Record 可独立存在，可选择关联其中的项目或会话。</p>
+        <p>服务重启后恢复 Record、待处理事项与会话索引，再重新确认活跃会话。历史索引保存已读取的文本和来源位置；图片与较大的工具输出可以按需读取。原始文件已移除且内容未被保存时，详情页说明哪些内容已不可用。</p>
+        <p>Record 保存成功后才显示“已保存”。保存失败时保留编辑内容并显示失败状态，供你重试或复制。数据导出和归档可作为首版管理能力的一部分，具体格式在详细设计时确认。</p>
+        <h3>已核查的本机版本</h3>
+        <p class="small">2026-10-13 初次核查记录：herdr 0.9.1；Codex CLI 0.162.1；pi 1.2.0；Kimi Code 2.1.1；Claude Code 2.1.274。2026-10-14 补充：herdr CLI 为 0.9.4，运行服务仍报告 0.9.1；Codex 公共服务为 0.162.1，desktop 原生日志元数据为 0.162.0-alpha.17.2。本次只读核查了会话事件结构与本项目轮次、锁信息，未安装 hook 或改变启动配置。</p>
+      </section>
+
+      <section id="research">
+        <h2>06 GitHub 调研提供了哪些参考</h2>
+        <p>你已选择自研。调研结果主要用于了解现有接入方式、减少重复摸索，并检查 Preview 与 Record 各自需要补齐什么。以下为公开文档和发布资产核查，候选产品尚未在本机运行。</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table class="research">
+            <thead><tr><th scope="col">项目</th><th scope="col">可参考的能力</th><th scope="col">与本次需求的差异</th><th scope="col">参考用途</th></tr></thead>
+            <tbody>
+              <tr><td><a href="https://github.com/herdrdev/herdr/blob/master/README.md">herdr</a></td><td>现有终端运行环境；提供项目目录、会话、agent 状态与 socket 事件。</td><td>Codex desktop 与独立 idea 管理需要另行接入和设计。</td><td>优先读取现有运行信息。<br><span class="small">本机 0.9.1</span></td></tr>
+              <tr><td><a href="https://github.com/illegalstudio/lazyagent/blob/main/docs/concepts/supported-agents.md">lazyagent</a></td><td>覆盖四类 CLI；旁路观察、Linux 界面、历史搜索与 HTTP API。</td><td><a href="https://github.com/illegalstudio/lazyagent/blob/main/docs/concepts/activity-states.md">状态由会话内容和时间推断</a>；文档未列出独立 idea 编辑管理与持久待处理流程。精确退出判断和 Codex desktop 需验证。</td><td>参考文件适配、增量读取。<br><span class="small"><a href="https://github.com/illegalstudio/lazyagent/releases/tag/v0.15.8">v0.15.8</a></span></td></tr>
+              <tr><td><a href="https://github.com/kenn-io/agentsview/blob/main/README.md">agentsview</a></td><td>覆盖 pi、Codex、Kimi、Claude 的历史；全文搜索、项目映射与会话预览。</td><td>文档重点是历史检索、分析和记忆；随时写 idea、管理待发送草稿和精确退出判断需补充确认。Kimi 数据目录随版本变化。</td><td>参考历史索引与中文搜索。<br><span class="small"><a href="https://github.com/kenn-io/agentsview/releases/tag/v0.45.0">v0.45.0</a></span></td></tr>
+              <tr><td><a href="https://github.com/coding-by-feng/ai-agent-session-center/blob/main/README.md">AI Agent Session Center</a></td><td>状态看板、会话笔记、保存的 prompt 与队列；发布资产包含 Linux 安装包。</td><td>文档明确支持 Claude Code 与 Codex CLI。pi、Kimi 和 Codex desktop 的覆盖仍需补齐；独立长期 idea 管理需进一步检查。</td><td>参考记录与会话的关联。<br><span class="small"><a href="https://github.com/coding-by-feng/ai-agent-session-center/releases/tag/v2.10.54">v2.10.54</a></span></td></tr>
+              <tr><td><a href="https://github.com/jiweiyeah/AgentMonitor/blob/main/README.md">AgentMonitor</a></td><td>Rust TUI、进程观察与会话预览；列出 Codex CLI / App 支持。</td><td>支持表未列 pi 与 Kimi，功能表未列 Record；desktop 的实际状态判断尚未验证。</td><td>参考 Rust 采集结构。<br><span class="small">main 文档</span></td></tr>
+              <tr><td><a href="https://github.com/lepfinder/AgentDeck/blob/main/README.md">AgentDeck</a></td><td>Rust / Tauri、历史检索与独立 prompt library。</td><td>当前文档面向 macOS 14+；支持表未列 pi 与 Kimi；运行状态与待处理流程仍需额外设计。</td><td>参考 Record 的独立存储。<br><span class="small">main 文档</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">调研日期：2026-10-13。主分支文档与发行版可能存在差异。例如 AI Agent Session Center 的 README 平台描述与 v2.10.54 的 Linux 发布资产有差异，安装能力以指定版本验证为准。</p>
+      </section>
+
+      <section id="acceptance">
+        <h2>07 首版需要通过的使用场景</h2>
+        <p>以下为建议的验收场景，供我们在开发前确认。它们同时覆盖 Preview 与 Record。状态更新延迟和搜索规模在接入样本验证后确定。</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+          <table>
+            <thead><tr><th scope="col">场景</th><th scope="col">可观察的结果</th></tr></thead>
+            <tbody>
+              <tr><td>所有 agent 都没有启动</td><td>仍可新建 idea、编辑 TODO、查找旧记录、管理分类与归档。</td></tr>
+              <tr><td>等待 agent 返回时想到新需求</td><td>从顶部“快速记录”写下；可以暂不选项目和 agent，随后在 Record 工作台找回。</td></tr>
+              <tr><td>已保存一条长记录，刷新或重启服务</td><td>正文、项目关联与状态保留；保存状态反映真实的持久保存结果。</td></tr>
+              <tr><td>寻找之前用中文写下的一个想法</td><td>按标题或正文中的中文片段找到记录；会话历史也使用中文片段检索验证。</td></tr>
+              <tr><td>把一条记录整理为 prompt 并复制</td><td>内容和换行保持正确；复制后保留记录，发送标记由你确认。</td></tr>
+              <tr><td>多个项目使用不同 agent 并行工作</td><td>五个接入对象均有对应的活跃会话入口，可按项目查看、预览最新进展。</td></tr>
+              <tr><td>两个 herdr workspace 共用目录</td><td>内部会话按实际 workspace 分组；外部会话无法唯一匹配时保留在未分类，可手动归属。</td></tr>
+              <tr><td>workspace 关闭或重命名</td><td>历史任务、未处理事项和 Record 继续可查，项目名称改变后仍能找到原来的记录。</td></tr>
+              <tr><td>关闭 herdr 客户端，但 agent 继续运行</td><td>看板继续展示其活跃会话；客户端关闭与 agent 退出分别判断。</td></tr>
+              <tr><td>在终端 kill 掉一个 agent</td><td>对应会话从 Live 监控墙移除，历史可搜索；已有待处理结果保留。</td></tr>
+              <tr><td>agent 长时间执行，暂时没有新输出</td><td>依据执行与存活信号保留正确状态，能够显示最后观察时间。</td></tr>
+              <tr><td>查看一条已完成会话后转去处理其他事情</td><td>待处理入口仍保留；你明确确认后才清除。</td></tr>
+              <tr><td>Codex desktop 同时执行多个会话</td><td>逐会话显示状态；结束其中一条时，其他会话继续正确展示。</td></tr>
+              <tr><td>同目录并发、切换会话、采集重启</td><td>会话身份清楚，合并重复来源；Record、历史和待处理事项继续保留。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="next">
+        <h2>08 下一步需要确认什么</h2>
+        <div class="review-box">
+          <p><strong>需求方向已经明确：</strong>自研、Ubuntu 单机、本机网页、旁路观察；Preview 与 Record 并列。你可以随时记录想法，随后再决定如何整理、关联和使用。</p>
+          <p><strong>GUI 方向以你的 demo 为参考：</strong>Preview / Record 两个主工作区，共享项目栏；Preview 内有 Live 监控墙和 Task 索引，Record 提供完整写作工作台。布局方向据此继续，具体 GUI 细节在实际开发时完善。</p>
+          <p><strong>本次补充的建议：</strong>默认按 herdr workspace 归属任务；外部会话用明确目录匹配。Rust 服务、SQLite、Svelte 网页及数据行为已写入 <a href="implementation.html">详细设计</a>，等待整体讨论确认。</p>
+          <p><strong>接入已有基础样本：</strong>herdr workspace 与原生会话关联可以读取；Codex desktop 的原生轮次和写入锁有可用数据。等待授权、强制退出与多会话并发仍需受控验证，五个接入对象继续保留在首版目标中。</p>
+        </div>
+        <p>后续开发使用 <a href="harness.html">项目 harness</a>组织计划、检查与验证结果。先完成影响状态准确性的接入验证，再进入主体开发；Record 从第一轮可用交付就提供完整写作流程。GUI 依照你的 demo 实现，并在开发中完善尺寸、布局和交互细节，具体步骤见 <a href="plans/first-delivery.html">首轮开发计划</a>。</p>
+        <p class="small">本次使用 dskills 管理 plain-docs，固定版本为 <code>08358ea88e32fc824a41a714c71b5e8ee0f478edbe3534023206c7e844680732</code>。Codex、Kimi、pi 共用项目的 <code>.agents/skills</code>，Claude 使用 <code>.claude/skills</code>；技能及本机管理文件已设置 Git 忽略。</p>
+      </section>
+
+      <section id="sources">
+        <h2>资料来源</h2>
+        <p class="small">链接对应本稿中的公开能力说明；本机版本信息来自版本命令。尚未通过实际采集验证的内容已在正文说明。</p>
+        <ol class="source-list">
+          <li>你的 AgentTV GUI demo：<code>/home/shq/opensource/agents/AgentTV/index.html</code>。2026-10-14 根据 HTML、CSS 和交互代码核查布局与使用流程，原文件保持原样。</li>
+          <li><a href="https://github.com/herdrdev/herdr/blob/master/docs/versions/0.9.1/website/src/content/docs/socket-api.mdx">Herdr 0.9.1 Socket API</a>：会话概况、事件订阅、agent 与进程信息。</li>
+          <li><a href="https://github.com/herdrdev/herdr/blob/master/docs/versions/0.9.0/website/src/content/docs/integrations.mdx">Herdr 集成文档</a>：各 agent 的原生集成方向。</li>
+          <li><a href="https://learn.chatgpt.com/docs/app-server">OpenAI：Codex app-server</a>：会话读取、列表、执行事件与本机传输方式。</li>
+          <li><a href="https://learn.chatgpt.com/docs/hooks">OpenAI：Codex hooks</a>：生命周期与等待授权事件，按 CLI 与 desktop 的实际版本分别验证。</li>
+          <li><a href="https://github.com/earendil-works/pi/blob/main/packages/coding-agent/src/core/extensions/types.ts">Pi 扩展事件定义</a>：会话和 agent 生命周期；需按安装版本核查。</li>
+          <li><a href="https://github.com/moonshotai/kimi-code/blob/main/docs/en/guides/sessions.md">Kimi Code 会话资料</a>：会话元数据和 wire 记录的目录结构。</li>
+          <li><a href="https://github.com/anthropics/claude-code/blob/v2.1.274/plugins/plugin-dev/skills/hook-development/references/patterns.md">Claude Code 2.1.274 hook 示例</a>：会话开始与执行结束等事件的扩展方式。</li>
+          <li><a href="https://github.com/illegalstudio/lazyagent/blob/main/docs/concepts/how-it-works.md">lazyagent 的观察方式</a>、<a href="https://github.com/illegalstudio/lazyagent/blob/main/docs/concepts/activity-states.md">状态推断</a>、<a href="https://github.com/illegalstudio/lazyagent/blob/main/docs/concepts/supported-agents.md">支持的 agent</a>、<a href="https://github.com/illegalstudio/lazyagent/blob/main/docs/interfaces/http-api.md">HTTP API</a>。</li>
+          <li><a href="https://github.com/kenn-io/agentsview/blob/main/README.md">agentsview README</a>：历史检索、中文搜索、项目映射和支持的 agent。</li>
+          <li><a href="https://github.com/coding-by-feng/ai-agent-session-center/blob/main/README.md">AI Agent Session Center README</a>、<a href="https://github.com/coding-by-feng/ai-agent-session-center/releases/tag/v2.10.54">v2.10.54 发布资产</a>：状态看板、笔记、队列和平台安装包。</li>
+          <li><a href="https://github.com/jiweiyeah/AgentMonitor/blob/main/README.md">AgentMonitor README</a>：Rust TUI、会话适配与进程观察。</li>
+          <li><a href="https://github.com/lepfinder/AgentDeck/blob/main/README.md">AgentDeck README</a>：Rust / Tauri、历史与独立 prompt library。</li>
+        </ol>
+      </section>
+    
+      <nav class="pager" aria-label="相邻文档"><a href="implementation.html">接入与数据设计 →</a></nav>
+      <footer>AgentTV 项目文档 · 本机阅读与打印</footer>
+    </main>
+  </div>
+</body>
+</html>

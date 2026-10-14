@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="agenttv:plan-status" content="complete">
+  <title>AgentTV · 仓库启动建设</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <header class="top"><a href="../discovery.html">AgentTV <span>项目文档</span></a><span class="revision">仓库启动建设 · 已完成</span><button type="button" class="print" onclick="window.print()">打印本页</button></header>
+  <div class="shell">
+    <nav class="sidebar" aria-label="文档导航"><details open><summary>目录</summary><p class="nav-group">项目设计</p><a href="../discovery.html">需求与 GUI 方向</a><a href="../implementation.html">接入与数据设计</a><p class="nav-group">开发与计划</p><a href="../harness.html">开发 Harness</a><a href="first-delivery.html">首轮开发计划</a><a aria-current="page" href="repository-bootstrap.html">仓库启动建设</a></details></nav>
+    <main id="main">
+      <header class="page-head"><div class="eyebrow">2026-10-14 · 仓库启动建设</div><h1>让仓库可接手、可检查、可继续开发</h1><p class="lead">补齐入口、验证说明和本地版本记录。产品开发继续由首轮产品计划管理。</p></header>
+      <nav class="toc" aria-label="本页目录"><b>本页内容</b><ul><li><a href="#purpose">目标与范围</a></li><li><a href="#progress">进度与步骤</a></li><li><a href="#decisions">发现与决定</a></li><li><a href="#validation">验证与验收</a></li><li><a href="#recovery">重试与恢复</a></li><li><a href="#outcomes">结果与剩余工作</a></li></ul></nav>
+      <section id="purpose"><h2>目标与范围</h2><p>新增 README，沿用现有 HTML 资料与唯一 harness 入口，检查忽略规则并创建本地 Git 初始提交。本轮不创建产品工程，不接入远程 CI、真实 agent 来源或额外工具。</p></section>
+      <section id="progress"><h2>进度与步骤</h2><p>2026-10-14：README、启动计划与状态说明已补齐；README 链接已纳入原有文档检查，并补充缺失锚点的回归测试。检查与忽略规则验证完成。本地 main 分支的初始提交保存当前仓库文件；提交号使用 git log -1 查看。</p></section>
+      <section id="decisions"><h2>发现与决定</h2><p>2026-10-14：用户确认实施最小仓库启动建设。参考本机 harness-engineering 模板 0.1.1 的短入口、检查报告和交接记录，保留 AgentTV 的 HTML 与现有命令。现有执行器已支持产品缺失与严格产品检查，本轮不另建 harness.json 或第二套脚本。14 个产品场景仍为 planned，无业务行为变化。</p></section>
+      <section id="validation"><h2>验证与验收</h2><p>验收：README 能找到目标、边界、当前状态和下一步；check 能验证仓库并保存报告；产品缺失时 check --scope product 返回非零；Git 忽略技能、运行报告和构建产物。</p><p>实际结果（2026-10-14）：doctor 通过，报告为 .harness/runs/20261014T143014Z-a11b8cfa/report.json；普通 check 通过，17 项 harness 测试通过，报告为 .harness/runs/20261014T142819Z-e6f88c68/report.json；严格产品检查返回 1，正确拒绝缺失工程与 14 个未实现测试，报告为 .harness/runs/20261014T142819Z-8c5b8ca8/report.json。cases 确认全部为 planned。git check-ignore 确认技能、检查报告与构建产物被排除。</p><p>报告仅保存在本机，提交中的记录保存结果与路径。浏览器通过本机 HTTP 打开本计划并读取内容；截图超时，排版视觉检查未完成。</p></section>
+      <section id="recovery"><h2>重试与恢复</h2><p>检查报告保存在 .harness/runs/，测试使用可丢弃数据。重跑使用相同入口，无需读取真实会话或修改用户配置。Git 仅在本项目初始化；提交前核对文件清单和忽略结果，不设置远程或修改全局 Git 配置。</p></section>
+      <section id="outcomes"><h2>结果与剩余工作</h2><p>仓库入口、唯一检查入口与本地版本记录已准备完成；初始提交包含现有设计与本次启动建设。产品计划仍待开始。下一轮从首轮产品计划的接入样例与可执行重放开始，并保持 Record 的独立可用目标。</p></section>
+
+      <nav class="pager" aria-label="相邻文档"><a href="first-delivery.html">← 首轮开发计划</a></nav>
+      <footer>AgentTV 项目文档 · 本机阅读与打印</footer>
+    </main>
+  </div>
+</body>
+</html>

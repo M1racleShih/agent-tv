@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="agenttv:plan-status" content="template">
+  <title>AgentTV · 开发计划模板</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <header class="top"><a href="../discovery.html">AgentTV <span>项目文档</span></a><span class="revision">开发计划模板</span><button type="button" class="print" onclick="window.print()">打印本页</button></header>
+  <div class="shell">
+    <nav class="sidebar" aria-label="文档导航"><details open><summary>目录</summary><p class="nav-group">项目设计</p><a href="../discovery.html">需求与 GUI 方向</a><a href="../implementation.html">接入与数据设计</a><p class="nav-group">开发与计划</p><a href="../harness.html">开发 Harness</a><a href="first-delivery.html">首轮开发计划</a><a aria-current="page" href="template.html">开发计划模板</a></details></nav>
+    <main id="main">
+      <header class="page-head"><div class="eyebrow">复制为当前任务的 HTML 计划后填写</div><h1>计划名称：说明完成后能做什么</h1><p>填写创建与更新日期，将 <code>agenttv:plan-status</code> 改为 planned、active、complete 或 blocked。状态反映实际进展，用户要求暂停时在正文记录。</p></header>
+      <nav class="toc" aria-label="本页目录"><b>本页内容</b><ul><li><a href="#purpose">目标与范围</a></li><li><a href="#progress">进度与步骤</a></li><li><a href="#decisions">发现与决定</a></li><li><a href="#validation">验证与验收</a></li><li><a href="#recovery">重试与恢复</a></li><li><a href="#outcomes">结果与剩余工作</a></li></ul></nav>
+      <section id="purpose"><h2>目标与范围</h2><p>说明用户会获得什么、为什么需要这次修改，以及本轮处理哪些内容。列出当前任务相关源码与设计章节，解释继续工作必需的背景。</p></section>
+      <section id="progress"><h2>进度与步骤</h2><p>按可以单独验证的结果划分步骤，标注未开始、进行中或完成，记录实际日期。为每步写明修改位置、依赖和完成后能观察到的变化。</p></section>
+      <section id="decisions"><h2>发现与决定</h2><p>记录影响实现的事实、决定、原因和日期。外部接口写明实际版本；改变方向时同时更新步骤与验收内容。</p></section>
+      <section id="validation"><h2>验证与验收</h2><p>列出相关场景 ID、实际可运行的命令、输入和预期结果。记录已执行检查的日期与结果；尚未提供的命令标明待实现。</p></section>
+      <section id="recovery"><h2>重试与恢复</h2><p>说明临时数据、实例与资源放在哪里，如何安全重跑和清理。修改保存格式时说明迁移、备份和失败后的恢复方式。</p></section>
+      <section id="outcomes"><h2>结果与剩余工作</h2><p>阶段结束时填写已经实现的行为、可查看的结果和实际验证范围。未完成内容与下一步保留明确记录，完成后将计划状态更新为 complete。</p></section>
+    
+      <nav class="pager" aria-label="相邻文档"><a href="first-delivery.html">← 首轮开发计划</a></nav>
+      <footer>AgentTV 项目文档 · 本机阅读与打印</footer>
+    </main>
+  </div>
+</body>
+</html>
