@@ -64,7 +64,7 @@
         <p>结果为 PASSED、FAILED 或 NOT_APPLICABLE；出现失败时返回非零退出码。普通检查可以在产品未创建时通过，严格产品检查此时应失败。</p>
         <p>Rust 工程存在时执行 Cargo 元数据依赖检查、<code>cargo fmt --all -- --check</code>、<code>cargo clippy --locked --workspace --all-targets -- -D warnings</code> 和 <code>cargo test --locked --workspace --all-targets</code>。</p>
         <p>网页工程存在时执行 npm 的 <code>check</code>、<code>test -- --run</code> 和 <code>build</code> scripts，均须非交互运行。严格产品检查还要求 <code>Cargo.lock</code>、<code>rust-toolchain.toml</code>、<code>web/package-lock.json</code> 和 <code>web/.node-version</code>。</p>
-        <p>检查器不会安装产品依赖。本地与未来 CI 使用同一入口；远程 CI 尚未配置。</p>
+        <p>检查器不会安装产品依赖。仓库托管于 <a href="https://github.com/M1racleShih/agent-tv">GitHub</a>；CI 尚未配置，未来接入时沿用同一检查入口。</p>
       </section>
 
       <section id="architecture">

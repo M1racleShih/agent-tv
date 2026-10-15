@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo.svg" alt="AgentTV：电视屏幕中的 agent 对话气泡" width="144" height="144">
+</p>
+
 # AgentTV
 
 AgentTV 计划在 Ubuntu 本机网页中按 herdr workspace 查看 agent 会话进展，并提供可独立使用的 Record，记录 idea、TODO 和 prompt。发送采用手动复制粘贴。
@@ -32,4 +36,4 @@ python3 scripts/harness.py check --scope product
 
 ## 仓库记录
 
-本地 Git 使用 `main` 分支，远程仓库、CI 和发布尚未配置。技能、检查报告和构建产物不进入版本控制。历史验收见 [仓库启动建设](docs/plans/repository-bootstrap.html)。
+项目托管于 [GitHub](https://github.com/M1racleShih/agent-tv)，主分支为 `main`。CI 和发布尚未配置；技能、检查报告和构建产物不进入版本控制。历史验收见 [仓库启动建设](docs/plans/repository-bootstrap.html)。

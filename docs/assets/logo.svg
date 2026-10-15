@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-labelledby="title desc">
+  <title id="title">AgentTV</title>
+  <desc id="desc">A blue television with a conversation bubble, two agent eyes and a green live indicator.</desc>
+  <rect x="4" y="4" width="184" height="184" rx="44" fill="#090b10"/>
+  <path d="M72 29 96 47 120 29" fill="none" stroke="#3b82f6" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="27" y="49" width="138" height="109" rx="24" fill="#11151f" stroke="#3b82f6" stroke-width="6"/>
+  <path d="M61 72h58a14 14 0 0 1 14 14v25a14 14 0 0 1-14 14H88l-20 15v-15h-7a14 14 0 0 1-14-14V86a14 14 0 0 1 14-14Z" fill="#3b82f6"/>
+  <path d="M74 92v11m32-11v11" stroke="#eff1f5" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="147" cy="83" r="5" fill="#40a02b"/>
+  <path d="M147 104v22M72 169h48" stroke="#4c4f69" stroke-width="6" stroke-linecap="round"/>
+</svg>
