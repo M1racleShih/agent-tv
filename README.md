@@ -1,39 +1,28 @@
 <p align="center">
-  <img src="docs/assets/logo.svg" alt="AgentTV：电视屏幕中的 agent 对话气泡" width="144" height="144">
+  <img src="docs/assets/logo.svg" alt="AgentTV logo: an agent conversation inside a television" width="144" height="144">
 </p>
 
-# AgentTV
+<h1 align="center">AgentTV</h1>
 
-AgentTV 计划在 Ubuntu 本机网页中按 herdr workspace 查看 agent 会话进展，并提供可独立使用的 Record，记录 idea、TODO 和 prompt。发送采用手动复制粘贴。
+<p align="center">Follow your agents. Keep your ideas.</p>
 
-**当前已有设计和仓库检查程序，产品源码与运行入口尚未创建。14 个关键产品场景均待实现。**
+<p align="center">English · <a href="README.zh-CN.md">简体中文</a></p>
 
-## 开始开发
+AgentTV is a workspace for following AI agent sessions and keeping the ideas that come next—without changing how you work with your agents.
 
-- [AGENTS.md](AGENTS.md)：开发边界与验证要求。
-- [需求与 GUI 方向](docs/discovery.html)：产品目标和界面参考。
-- [接入与数据设计](docs/implementation.html)：数据、状态和模块职责。
-- [首轮产品计划](docs/plans/first-delivery.html)：当前进度与下一步。
+## Why AgentTV?
 
-下一步是建立合成接入样例和可执行重放，再逐步提供独立 Record 与 Preview。按实际需要创建产品模块，不提前搭空工程。
+Working with several agents means switching between tools to check progress, find a result, or remember what to do next. AgentTV aims to bring that context together in two connected spaces:
 
-## 检查仓库
+- **Preview** — See progress across projects, find conversations, and keep results that need your attention visible until you mark them handled.
+- **Record** — Capture ideas, TODOs, and prompts. Refine them when you're ready, then copy them into your agent of choice. Useful even when no agents are running.
 
-在项目根目录使用 Python 3.11 或更高版本；检查程序只依赖标准库。
+Keep using your existing agent tools. AgentTV is being designed to observe their activity, preserve searchable history, and leave you in control of what gets sent.
 
-```sh
-python3 scripts/harness.py doctor  # 首次进入环境时检查工具
-python3 scripts/harness.py check   # 检查仓库和已存在的产品工程
-```
+## Early development
 
-当前普通检查可以通过，但缺失的产品工程会显示 `NOT_APPLICABLE`，不代表产品可用。交付首版前运行严格检查：
+AgentTV is in the design stage; there is no runnable application yet. Initial integration targets include pi, Codex CLI and desktop, Kimi Code, and Claude Code. These are plans, not current compatibility claims.
 
-```sh
-python3 scripts/harness.py check --scope product
-```
+See the [product direction](docs/discovery.html), [development plan](docs/plans/first-delivery.html), or [contributor guidance](AGENTS.md). Design documents are currently in Chinese.
 
-该命令目前应失败。局部检查、场景登记和报告格式见 [开发 Harness](docs/harness.html#commands)。真实接入与页面使用另行验证。
-
-## 仓库记录
-
-项目托管于 [GitHub](https://github.com/M1racleShih/agent-tv)，主分支为 `main`。CI 和发布尚未配置；技能、检查报告和构建产物不进入版本控制。历史验收见 [仓库启动建设](docs/plans/repository-bootstrap.html)。
+Ideas and feedback are welcome in [Issues](https://github.com/M1racleShih/agent-tv/issues).
