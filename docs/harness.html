@@ -9,151 +9,100 @@
 </head>
 <body>
   <a class="skip" href="#main">跳到正文</a>
-  <header class="top"><a href="discovery.html">AgentTV <span>项目文档</span></a><span class="revision">开发 Harness · v0.1</span><button type="button" class="print" onclick="window.print()">打印本页</button></header>
+  <header class="top"><a href="discovery.html">AgentTV <span>项目文档</span></a><span class="revision">开发 Harness</span><button type="button" class="print" onclick="window.print()">打印本页</button></header>
   <div class="shell">
     <nav class="sidebar" aria-label="文档导航"><details open><summary>目录</summary><p class="nav-group">项目设计</p><a href="discovery.html">需求与 GUI 方向</a><a href="implementation.html">接入与数据设计</a><p class="nav-group">开发与计划</p><a aria-current="page" href="harness.html">开发 Harness</a><a href="plans/first-delivery.html">首轮开发计划</a><a href="plans/template.html">开发计划模板</a><a href="plans/repository-bootstrap.html">仓库启动建设</a></details></nav>
     <main id="main">
       <header class="page-head">
-        <div class="eyebrow">2026-10-14 · 面向 Codex、pi、Kimi Code 与 Claude Code</div>
-        <h1>让下一轮开发能接着做，也能检查结果</h1>
-        <p class="lead">每轮工作先说明用户能得到什么，再实现、验证和修复。需求、决定与进度保存在项目中，检查命令提供实际结果，后续 agent 可以据此继续。</p>
-        <div class="badges">
-          <span class="badge">共享入口：AGENTS.md</span>
-          <span class="badge">执行计划：HTML</span>
-          <span class="badge">检查入口：scripts/harness.py</span>
-        </div>
-        <p class="small">本轮建立开发工具和规则，产品代码尚未创建。当前可运行的检查覆盖 harness 自身；Rust、网页和关键产品场景的验证随实现接入。</p>
+        <div class="eyebrow">面向 Codex、pi、Kimi Code 与 Claude Code</div>
+        <h1>用现有工具支持产品开发</h1>
+        <p class="lead">这里说明检查范围、测试边界和结果保存方式。日常开发规则见 <a href="../AGENTS.md">AGENTS.md</a>；产品进度见 <a href="plans/first-delivery.html">首轮计划</a>。</p>
+        <p class="small">产品源码尚未创建。仓库检查通过不代表产品已经可用。</p>
       </header>
-      <nav class="toc" aria-label="本页目录"><b>本页内容</b><ul><li><a href="#purpose">01 要解决什么</a></li><li><a href="#map">02 从哪里获取项目知识</a></li><li><a href="#loop">03 每轮开发怎样完成</a></li><li><a href="#commands">04 可执行的检查入口</a></li><li><a href="#architecture">05 程序边界怎样检查</a></li><li><a href="#verification">06 样例、真实接入与页面</a></li><li><a href="#evidence">07 保存结果与继续工作</a></li><li><a href="#maintenance">08 维护与技能管理</a></li><li><a href="#sources">参考资料</a></li></ul></nav>
-      <p class="small document-note">harness 指支持 agent 持续开发的项目资料、工具、运行环境和检查过程。这里保存 AgentTV 的具体约定。</p>
+      <nav class="toc" aria-label="本页目录"><b>本页内容</b><ul><li><a href="#purpose">用途与取舍</a></li><li><a href="#map">资料放在哪里</a></li><li><a href="#loop">何时需要计划</a></li><li><a href="#commands">检查命令</a></li><li><a href="#architecture">架构检查</a></li><li><a href="#verification">测试与实际使用</a></li><li><a href="#evidence">结果保存</a></li><li><a href="#maintenance">维护原则</a></li></ul></nav>
 
       <section id="purpose">
-        <h2>01 把开发需要的信息与反馈放进项目</h2>
-        <p>你同时使用不同 agent，开发工作可能跨会话、跨工具继续。AgentTV 需要一份易找的项目说明、可维护的执行计划，以及能反映实际状态的检查结果。人负责目标、优先级和影响范围的决定，agent 完成已授权的实现与验证。</p>
-        <p>参考 OpenAI 的 <a href="https://openai.com/index/harness-engineering/">Harness engineering</a>，这里采用简短入口、项目内知识、可执行约束与可观察结果四个做法。下面的目录、命令和验收场景根据 AgentTV 的需求制定。<a href="https://learn.chatgpt.com/docs/learn/best-practices">Codex 最佳实践</a>也建议把工作方式与验证入口写入项目说明。</p>
-        <p>首版保持工具精简：开发脚本使用 Python 标准库，产品后端继续使用 Rust，网页使用 Svelte + TypeScript。现有 herdr 与各 agent 的启动方式继续沿用。</p>
+        <h2>用途与取舍</h2>
+        <p>harness 是帮助后续 agent 理解项目、执行检查和继续工作的资料与工具，不是独立产品。当前保留一个 Python 标准库脚本、机器可读策略和关键场景目录，不再增加第二套执行入口。</p>
+        <p>新增规则或工具应解决实际开发中反复出现的问题。暂未实现的能力写明缺失，不靠增加文档或空工程表示进度。</p>
       </section>
 
       <section id="map">
-        <h2>02 用短入口找到当前任务需要的资料</h2>
-        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
-          <table>
-            <thead><tr><th scope="col">位置</th><th scope="col">负责的信息</th></tr></thead>
-            <tbody>
-              <tr><td><a href="../README.md">README.md</a></td><td>仓库当前状态、阅读入口、可执行命令和下一步。仓库启动建设的决定与验收见 <a href="plans/repository-bootstrap.html">独立记录</a>。</td></tr>
-              <tr><td><a href="../AGENTS.md">AGENTS.md</a></td><td>共享开发入口：工作步骤、核心行为、检查命令、范围与授权要求。详细说明通过链接查找。</td></tr>
-              <tr><td><a href="../CLAUDE.md">CLAUDE.md</a></td><td>仅使用 <code>@AGENTS.md</code> 引入共享入口，便于 Claude Code 沿用同一份规则。</td></tr>
-              <tr><td><a href="discovery.html">discovery.html</a></td><td>用户需求、首版范围、GUI demo 的布局与视觉方向。参考文件的路径、颜色和使用流程在这里可查。</td></tr>
-              <tr><td><a href="implementation.html">implementation.html</a></td><td>workspace 归属、会话与轮次、状态、待处理事项、Record、采集方式和已观察的本机能力。</td></tr>
-              <tr><td><a href="plans/first-delivery.html">首轮开发计划</a></td><td>这轮产品开发的目标、阶段、完成标准、进度与决定。复杂的新任务按 <a href="plans/template.html">计划模板</a>另建 HTML 计划。</td></tr>
-              <tr><td><a href="../harness/policy.json">policy.json</a></td><td>机器可读的文档清单、技能与运行产物的忽略规则，以及 Rust 包的依赖方向。</td></tr>
-              <tr><td><a href="../harness/cases.json">cases.json</a></td><td>关键使用场景、对应说明和自动测试命令。尚未实现的测试使用 <code>null</code> 明确标识。</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p>当前任务只读取相关章节和源码。改变需求或行为时，更新对应说明和受影响的场景；例行文案、样式或小范围修复可使用简短的会话计划。</p>
-        <p>四类 agent 共用这些文件。dskills 继续管理技能的实际安装位置，项目规则和技能内容各自维护。GUI demo 的原文件保持只读；项目内已有布局说明和校验摘要，新的会话可以从这些资料开始。</p>
+        <h2>资料放在哪里</h2>
+        <ul>
+          <li><a href="../README.md">README</a>：项目是什么、当前状态和上手命令。</li>
+          <li><a href="../AGENTS.md">AGENTS.md</a>：必要开发规则；<a href="../CLAUDE.md">CLAUDE.md</a> 只导入这一份。</li>
+          <li><a href="discovery.html">需求</a>与<a href="implementation.html">架构设计</a>：产品行为与技术决定。</li>
+          <li><a href="plans/first-delivery.html">执行计划</a>：当前进度、决定和剩余工作；<a href="plans/repository-bootstrap.html">启动记录</a>保留历史验收，不作为日常必读。</li>
+          <li><a href="../harness/policy.json">policy.json</a>：文档清单、忽略目录和依赖方向；<a href="../harness/cases.json">cases.json</a>：关键场景、设计出处和自动命令。</li>
+        </ul>
+        <p>只读当前任务相关内容。细节在负责它的文件中维护，其他入口用链接引用，不重复抄写状态与规则。</p>
       </section>
 
       <section id="loop">
-        <h2>03 一轮开发围绕可看到的结果推进</h2>
-        <ol>
-          <li><strong>说明结果。</strong>写清楚完成后用户能做什么，指向相应验收场景，并说明本次修改哪些模块。</li>
-          <li><strong>维护计划。</strong>涉及多模块、状态行为、数据库或接入方式时，创建或更新 HTML 计划。记录依赖、风险与验证方式，进度变化时同步更新。</li>
-          <li><strong>实现可运行的一步。</strong>把数据、服务和必要页面连接起来，尽早使用真实结构的合成样例。常规且可撤销的技术细节由执行 agent 处理。</li>
-          <li><strong>检查并修复。</strong>运行覆盖本次行为的检查，处理本次改动造成的失败，确认服务或页面实际表现。新行为与回归问题需要能证明结果的测试。</li>
-          <li><strong>保存并交付。</strong>更新计划与说明，报告做成了什么、实际运行了哪些检查，以及仍未验证的部分。</li>
-        </ol>
-        <p>小范围文档与样式修改按影响选择检查。已有检查继续覆盖最终改动时可以复用结果；相关代码、输入或环境变化后重新验证。发现同类问题反复出现时，将具体原因补进说明或检查程序。</p>
-        <p>例行开发继续使用已有授权。改变需求覆盖、影响项目外状态或涉及工具审批时，再提出具体决定。子 agent 的使用须获得用户对名称、任务和范围的明确批准。</p>
+        <h2>何时需要计划</h2>
+        <p>小修复、文档和样式调整在会话中说明目标与检查即可，不新建计划文件。涉及多模块行为、数据迁移或较大接入工作时，更新已有 HTML 计划；没有适用计划再使用<a href="plans/template.html">模板</a>创建。</p>
+        <p>计划记录影响后续工作的进度、决定、验证和遗留问题，不逐条复制终端日志。设计只随行为变化更新；场景目录只追踪关键验收场景，不要求每个测试单独登记。</p>
       </section>
 
       <section id="commands">
-        <h2>04 用同一个入口运行本地与 CI 检查</h2>
-        <p>在项目根目录运行，要求 Python 3.11 或更高版本。脚本使用标准库，首次运行即可检查当前项目。</p>
-        <pre><code>python3 scripts/harness.py doctor
-python3 scripts/harness.py check --scope docs
-python3 scripts/harness.py check
-python3 scripts/harness.py cases
-python3 scripts/harness.py check --scope product</code></pre>
-        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
+        <h2>检查命令</h2>
+        <p>在项目根目录运行 <code>python3 scripts/harness.py &lt;命令&gt;</code>，要求 Python 3.11 或更高版本。</p>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="检查命令，可横向滚动">
           <table>
-            <thead><tr><th scope="col">命令</th><th scope="col">运行内容与结果含义</th></tr></thead>
+            <thead><tr><th scope="col">命令</th><th scope="col">范围</th></tr></thead>
             <tbody>
-              <tr><td><code>doctor</code></td><td>读取本机 Python、Git、Rust、Node、npm 与 dskills 状态。确认四类 agent、plain-docs 和 no-track 配置。Git 尚未初始化时说明现状，本地检查仍可使用。</td></tr>
-              <tr><td><code>check --scope docs</code></td><td>检查 HTML 标签嵌套、链接与锚点、计划必需章节、共享指令入口、忽略规则和场景目录。排版观感与文案由实际阅读和可用的页面工具核查。</td></tr>
-              <tr><td><code>check --scope harness</code></td><td>包含文档检查，并运行 harness 的自测。自测使用临时文件、合成 Cargo 元数据和短命测试进程。</td></tr>
-              <tr><td><code>check</code></td><td>包含以上检查。<code>Cargo.toml</code> 存在时运行依赖方向、格式、Clippy 和测试；<code>web/package.json</code> 存在时运行类型检查、测试与构建。尚未创建的产品项目明确显示 NOT_APPLICABLE。</td></tr>
-              <tr><td><code>cases</code></td><td>列出每个关键场景的测试登记情况。planned 表示仍需编写；registered 表示已有命令，实际结果需要通过运行取得。</td></tr>
-              <tr><td><code>check --scope product</code></td><td>要求完整 Rust 与网页工程、依赖锁文件、工具链文件和全部关键场景的自动命令，逐项运行并保存结果。缺少任何必要部分时返回失败。</td></tr>
+              <tr><td><code>doctor</code></td><td>首次进入环境或工具链变更时使用。检查 Python、Git、Rust、Node、npm 和 dskills，不安装工具、不修改配置。</td></tr>
+              <tr><td><code>check --scope docs</code></td><td>HTML 标签嵌套、链接与锚点、计划状态和必需章节、共享指令入口、忽略规则、场景目录。</td></tr>
+              <tr><td><code>check --scope harness</code></td><td>文档检查加 harness 自测。</td></tr>
+              <tr><td><code>check</code></td><td>以上检查，加已存在的 Rust 和网页工程检查。缺失的产品工程标记 NOT_APPLICABLE。</td></tr>
+              <tr><td><code>cases</code></td><td>列出关键场景。planned 表示待实现；registered 仅表示已登记命令，不表示测试通过。</td></tr>
+              <tr><td><code>check --scope product</code></td><td>首版交付前运行。要求完整产品工程、可复现配置和全部关键场景命令，并逐项执行；缺失时失败。</td></tr>
             </tbody>
           </table>
         </div>
-        <p>每次运行输出 PASSED、FAILED 或 NOT_APPLICABLE，失败返回非零退出码，并打印 JSON 报告位置。产品尚未创建时，普通检查可以通过；严格产品检查应失败。开发交付说明需要同时说明检查范围和未覆盖能力。</p>
-        <p>Rust 验证使用 <code>cargo fmt</code>、<code>cargo clippy --locked --workspace --all-targets -- -D warnings</code> 和 <code>cargo test --locked --workspace --all-targets</code>。网页提供非交互的 <code>check</code>、<code>test</code>、<code>build</code> npm scripts，其中测试接受 <code>--run</code>。</p>
-        <p>创建产品工程时同时保存 <code>Cargo.lock</code>、<code>rust-toolchain.toml</code>、<code>web/package-lock.json</code> 和 <code>web/.node-version</code>。本机与 CI 使用同一检查入口；CI 安装相应工具链和锁定的依赖后运行。当前目录已初始化本地 Git；托管平台与远程 CI 尚未配置。</p>
+        <p>结果为 PASSED、FAILED 或 NOT_APPLICABLE；出现失败时返回非零退出码。普通检查可以在产品未创建时通过，严格产品检查此时应失败。</p>
+        <p>Rust 工程存在时执行 Cargo 元数据依赖检查、<code>cargo fmt --all -- --check</code>、<code>cargo clippy --locked --workspace --all-targets -- -D warnings</code> 和 <code>cargo test --locked --workspace --all-targets</code>。</p>
+        <p>网页工程存在时执行 npm 的 <code>check</code>、<code>test -- --run</code> 和 <code>build</code> scripts，均须非交互运行。严格产品检查还要求 <code>Cargo.lock</code>、<code>rust-toolchain.toml</code>、<code>web/package-lock.json</code> 和 <code>web/.node-version</code>。</p>
+        <p>检查器不会安装产品依赖。本地与未来 CI 使用同一入口；远程 CI 尚未配置。</p>
       </section>
 
       <section id="architecture">
-        <h2>05 在依赖方向上执行程序边界</h2>
-        <p>产品采用四个 Rust 包与一个网页目录，按首轮计划逐步创建。采集器提供领域观察，数据库保存记录，服务协调两者，网页通过本机接口查看与编辑。</p>
-        <div class="table-wrap" tabindex="0" role="region" aria-label="表格，可横向滚动">
-          <table>
-            <thead><tr><th scope="col">目录与包</th><th scope="col">职责和允许的本地依赖</th></tr></thead>
-            <tbody>
-              <tr><td><code>crates/domain</code><br><code>agenttv-domain</code></td><td>会话、轮次、状态、待处理与 Record 的类型和行为。独立于其他项目包，业务计算保持便于用样例验证。</td></tr>
-              <tr><td><code>crates/storage</code><br><code>agenttv-storage</code></td><td>SQLite 保存、修订冲突、查询与恢复。可依赖 domain。</td></tr>
-              <tr><td><code>crates/adapters</code><br><code>agenttv-adapters</code></td><td>读取 herdr 和原生数据，检查格式并产生 domain 观察。可依赖 domain。</td></tr>
-              <tr><td><code>crates/server</code><br><code>agenttv-server</code></td><td>运行采集、保存观察并提供 HTTP / SSE。可依赖 domain、storage 和 adapters。</td></tr>
-              <tr><td><code>web</code></td><td>Svelte + TypeScript 页面。通过服务接口取得数据，实现 Preview、Record、搜索与交互。</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p>检查程序读取 Cargo 元数据，验证包的位置和全部本地依赖方向，domain 也检查 Axum、Tokio、rusqlite 等依赖。错误信息指出具体依赖和调整方向。需要改变结构时同时修改设计、policy 和相关检查。</p>
-        <p>依赖检查覆盖静态包关系。状态是否正确、保存是否可靠和采集能否恢复，由对应场景测试验证。来源数据进入系统时解析并检查格式，未知字段或未知状态保留诊断信息。</p>
+        <h2>架构检查</h2>
+        <p>当前采用四个 Rust 包与网页目录，按产品实现需要逐步创建。具体允许的依赖见 <a href="../harness/policy.json">policy.json</a>：domain 不依赖其他本地包，storage 和 adapters 可依赖 domain，server 可依赖三者。</p>
+        <p>执行器读取 Cargo 元数据，检查 workspace 包位置、本地依赖方向，以及 domain 对 Axum、Tokio、rusqlite 的禁止依赖。这是静态包关系检查，不证明业务正确，也不全面限制所有第三方依赖。</p>
+        <p>结构需要调整时，随实现一起修改<a href="implementation.html">架构设计</a>、policy 和相关测试，不为满足旧目录约定保留空模块。</p>
       </section>
 
       <section id="verification">
-        <h2>06 分别验证样例、真实来源和页面</h2>
-        <h3>自动检查使用可丢弃的样例</h3>
-        <p>目前登记了 14 个关键场景，覆盖 workspace、Preview、待处理、Record、搜索与渲染。每个场景有稳定 ID、预期结果与设计章节；实现对应行为时补上实际的自动测试命令。测试应在行为错误时失败，并保证目标测试确实执行。</p>
-        <p>测试使用合成的会话 ID、文本、JSONL 和 socket 事件，样例明确注明来源格式与模拟内容。进程测试只管理本次创建的进程。临时数据放入独立目录，测试完成后清理自己创建的资源。</p>
-        <p>harness 启动检查命令时提供 <code>AGENTTV_DATA_DIR</code>、<code>AGENTTV_SOURCE_MODE=fixture</code> 和 <code>AGENTTV_FIXTURES_DIR</code>。产品与测试实现时必须实际遵守这些设置；它们表达运行约定，本身不提供操作系统级隔离。</p>
-        <h3>真实接入单独记录观察</h3>
-        <p>真实来源用于确认安装版本、事件语义、延迟和进程关联，结果记录具体版本、步骤和未覆盖行为。读取历史、添加 hook、创建测试会话与终止测试进程分别说明范围。既有工作会话继续正常运行。</p>
-        <p>herdr CLI、运行服务和 desktop 内置版本分别记录。缺少字段或连接失败时显示实际能力；状态推断依据保留来源与观察时间。合成样例通过后，真实接入仍需要本机观察支持。</p>
-        <h3>页面交付包含实际使用</h3>
-        <p>页面按你的 demo 布局与视觉方向实现，使用合成内容启动独立开发实例。检查 Preview / Record 切换、快速记录、保存状态、待处理确认、窄屏布局和长文本。浏览器检查使用当次允许的工具，保存必要截图或操作记录。</p>
-        <p>浏览器工具限制某种 URL 或操作时，记录未验证部分，继续完成源码、类型和可执行测试。工具允许的运行方式准备好后补做页面检查。当前 HTML 文档完成结构和链接检查，实际页面排版仍受 file:// 访问限制。</p>
-        <p>严格产品检查说明自动验证的结果。五个来源的真实状态准确性和 GUI 的实际观感另列观察记录，交付时一并说明。</p>
+        <h2>测试与实际使用分别验证</h2>
+        <h3>日常自动检查</h3>
+        <p>使用合成来源和可丢弃数据，不读取真实 agent 历史，不修改用户配置，也不启动或终止已有 agent。进程测试只清理本次创建的进程。harness 自测覆盖文档错误、依赖违规、命令失败、空测试运行和技能配置等失败路径。</p>
+        <p>子命令获得独立的 <code>AGENTTV_DATA_DIR</code>，以及 <code>AGENTTV_SOURCE_MODE=fixture</code>、指向 <code>tests/fixtures</code> 的 <code>AGENTTV_FIXTURES_DIR</code>。这些环境变量不是操作系统沙箱，产品和测试必须实际遵守。</p>
+        <p>14 个关键场景覆盖 workspace、Preview、待处理、Record、搜索和安全渲染。实现相应行为时登记能实际执行目标测试的命令，避免只检查命令是否成功退出。</p>
+        <h3>真实接入与页面</h3>
+        <p>真实来源单独验证，记录具体版本、操作范围和未覆盖行为。herdr CLI、运行服务与 desktop 内置版本分别记录；原生历史保持只读，已有会话不受影响。</p>
+        <p>页面按用户 demo 方向，用合成内容启动独立实例，实际操作 Preview / Record、保存、复制、搜索和确认，检查窄屏与长文本。浏览器工具可用时做交互和视觉检查；不可用时报告未验证部分，不用类型检查代替实际使用结论。</p>
+        <p>严格产品检查只证明所运行的自动检查结果。五个来源的生命周期准确性与 GUI 观感仍需实际观察。</p>
       </section>
 
       <section id="evidence">
-        <h2>07 保存实际结果，方便下个会话继续</h2>
-        <p>每次检查在 <code>.harness/runs/&lt;UTC 时间与唯一标识&gt;/</code> 保存报告、子命令日志和本次数据目录；各个子命令使用自己的数据子目录。报告记录检查范围、实际命令、运行时长、退出结果，以及关键场景登记数量。目录已加入 Git 忽略，运行记录保留在本机。</p>
-        <p>执行计划记录可复查的短结果、日期和有关决定。重要失败需要写明如何复现与恢复；产品行为尚未完成时，保持对应步骤未完成。复制终端结果时保留必要信息，真实会话正文与凭据继续留在原有本机数据中。</p>
-        <p>继续一个任务时，先看计划进度、相关源码和最近结果，再判断旧检查是否仍覆盖当前输入。归档计划时记录实现结果、遗留问题和后续工作；新任务可通过链接找到需要的历史决定。</p>
-        <p><a href="plans/template.html">计划模板</a>包含目的、进度、决定、验证、恢复与结果六部分。格式使用 HTML；较小任务可直接在会话说明目标与检查，避免产生仅为填表的计划。</p>
+        <h2>结果保存</h2>
+        <p><code>doctor</code> 和 <code>check</code> 在 <code>.harness/runs/&lt;UTC 时间与唯一标识&gt;/</code> 保存 JSON 报告；子命令另有日志和独立数据目录。报告包含范围、实际命令、时长、结果及场景登记数量。<code>cases</code> 只输出登记情况。</p>
+        <p>运行记录留在本机，不进 Git。交付说明给出实际检查结果和未覆盖部分；已有计划只保存后续需要的短结论、重要失败的复现方法和报告路径，不另建验收文档。真实会话正文和凭据不复制进仓库。</p>
       </section>
 
       <section id="maintenance">
-        <h2>08 按实际摩擦改进工具与说明</h2>
-        <p>每轮修改结束时检查相邻说明、链接和场景是否受影响。多次出现同一类错误时，优先补上可复现的样例、明确的输入检查或具体的开发说明。规则保持贴近当前工程，失效内容随相关修改更新。</p>
-        <p>dskills 保持 no-track，当前只安装 plain-docs：Codex、Kimi、pi 共用 <code>.agents/skills</code>，Claude 使用 <code>.claude/skills</code>。新增技能需有具体任务用途；常用命令与短规则优先保留在本项目说明和脚本中。</p>
-        <p>周期维护目前由实际开发任务触发。后续需要调度自动运行、使用子 agent、发送消息或发布结果时，按用户授权范围和当次工具要求执行。</p>
+        <h2>维护原则</h2>
+        <p>先推进产品。只有现有流程造成重复问题时，才补检查、规则或工具；不为完整性增加模板、登记项和固定步骤。</p>
+        <p>技能由 dskills 以 no-track 管理，当前只选 plain-docs。Codex、Kimi、pi 共用 <code>.agents/skills</code>，Claude 使用 <code>.claude/skills</code>。技能、运行记录和构建产物保持 Git 忽略。</p>
+        <p>不增加定时维护、子 agent 或远程自动化的默认授权，范围与审批要求见 AGENTS.md。</p>
       </section>
 
       <section id="sources">
         <h2>参考资料</h2>
-        <ol class="sources">
-          <li><a href="https://openai.com/index/harness-engineering/">OpenAI · Harness engineering: leveraging Codex in an agent-first world</a>，2026-02-11。参考其项目知识组织、可执行约束与可观察运行结果。</li>
-          <li><a href="https://learn.chatgpt.com/docs/learn/best-practices">OpenAI · Codex best practices</a>。参考简短 AGENTS.md、可复用工作方式和明确验证入口。</li>
-          <li><a href="https://developers.openai.com/cookbook/articles/codex_exec_plans">OpenAI Cookbook · Using PLANS.md for multi-hour problem solving</a>。本文已归档；这里只参考持续维护计划的组织方式，项目计划采用 HTML。</li>
-          <li><a href="https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md">Claude Code 官方变更记录</a>。核查 CLAUDE.md 的 <code>@path</code> 导入方式，版本和 provider 支持另行核实。</li>
-          <li><a href="implementation.html#evidence">AgentTV 本机接入观察</a>与<a href="discovery.html#pages">你的 GUI demo 方向</a>。本项目的行为与范围以用户要求和当前设计为依据。</li>
-        </ol>
+        <p>最初设计参考 OpenAI 的 <a href="https://openai.com/index/harness-engineering/">Harness engineering</a>、<a href="https://learn.chatgpt.com/docs/learn/best-practices">Codex 最佳实践</a>和已归档的 <a href="https://developers.openai.com/cookbook/articles/codex_exec_plans">执行计划示例</a>。项目采用哪些做法，以实际开发需要为准。</p>
       </section>
-
       <nav class="pager" aria-label="相邻文档"><a href="implementation.html">← 接入与数据设计</a><a href="plans/first-delivery.html">首轮开发计划 →</a></nav>
       <footer>AgentTV 项目文档 · 本机阅读与打印</footer>
     </main>

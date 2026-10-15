@@ -3,8 +3,6 @@
 ## Read for the current task
 
 - [Repository status and getting started](README.md)
-- [Repository bootstrap record](docs/plans/repository-bootstrap.html)
-
 - [Product requirements and GUI direction](docs/discovery.html)
 - [Architecture, state and Record behavior](docs/implementation.html)
 - [Development harness and completion rules](docs/harness.html)
@@ -12,30 +10,21 @@
 
 Read the relevant sections and source files. Keep this entry short; put detailed decisions in the linked HTML documents.
 
-## Working loop
+## Working on a change
 
-1. State the intended user-visible result and relevant acceptance cases.
-2. For substantial work, create or update an HTML plan using [the plan template](docs/plans/template.html). Keep progress, decisions, evidence and remaining work current.
-3. Implement a small working increment. Preserve other contributors' changes.
-4. Run the checks that cover the changed behavior, repair in-scope failures, and inspect the result.
-5. Update affected specifications and case registrations. Report actual checks, results and material limits.
+State the intended result, implement a small working increment, and run checks covering the change. Preserve other contributors' changes and repair in-scope failures.
+
+Small fixes, documentation and styling changes need no plan file. Use an [HTML plan](docs/plans/template.html) for multi-module behavior changes, data migrations or substantial integration work; update an existing plan rather than creating a parallel one. Update specifications only when their described behavior changes. Register commands for implemented critical cases, not every individual test.
 
 ## Commands
 
 Run from the project root with Python 3.11 or later:
 
 ```sh
-python3 scripts/harness.py doctor
-python3 scripts/harness.py check --scope docs
 python3 scripts/harness.py check
-python3 scripts/harness.py cases
-python3 scripts/harness.py check --scope product
 ```
 
-`doctor` checks local tools and dskills. Run it when starting in a new environment or changing toolchains.
-`check` runs repository checks and all product suites whose manifests exist. Missing product suites are reported explicitly.
-`--scope product` additionally requires both product manifests, reproducibility files and every critical case's automated command. A bootstrap pass does not establish product readiness.
-The command prints its report path under `.harness/runs/`. Reports contain only the checks actually run.
+Use `doctor` in a new environment or after toolchain changes, `check --scope docs` for documentation-only changes, and `check --scope product` before product delivery. Ordinary `check` can pass with missing product projects; it does not establish product readiness. See [command details and reports](docs/harness.html#commands).
 
 ## Product invariants
 
@@ -65,5 +54,6 @@ Tests use disposable data and synthetic source records. Live integration checks 
 
 ## Completion
 
-Deliver working behavior with appropriate tests or inspection, corresponding plan and case updates, and a concise report. Changed UI behavior also needs browser interaction and visual inspection when the available browser tools permit it. Report unavailable checks explicitly.
+Deliver working behavior with appropriate tests or inspection and a concise report of actual results and limits. Update plans and cases only when affected. Changed UI behavior also needs browser interaction and visual inspection when the available browser tools permit it. Report unavailable checks explicitly.
+Keep harness changes driven by recurring development problems. Do not add tools, templates, registrations or process steps merely for completeness.
 Publishing, sending messages, merging and recurring automation follow the user's authorization and applicable tool approvals.
